@@ -22,3 +22,9 @@ docker compose up
 ```
 
 to run with Docker.
+
+### Linting
+To lint, run: 
+```bash
+npx eslint {filename}
+```
