@@ -5,17 +5,11 @@ Immortal Hedgehogs Hello DevOps project. endyBot is an EOD post manager that ens
 To run endyBot locally, you will need a .env file with the following format:
 
 ```
-SLACK_BOT_TOKEN={Bot token}
-SLACK_APP_TOKEN={App token}
+SLACK_CREDS={"SLACK_BOT_TOKEN": "[bot token]", "SLACK_APP_TOKEN": "[app token]"}
+DEV=1
 ```
 
 Start the app by running:
-
-```bash
-npm start
-```
-
-or 
 
 ```bash
 docker compose up
