@@ -17,8 +17,8 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # - uses: actions/setup-python@v3
-      - uses: pre-commit/action@v3.0.0
+      - name: Verify linting passes on all .js files
+        uses: pre-commit/action@v3.0.0
         with:
           extra_args: eslint --all-files
 
