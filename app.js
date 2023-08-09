@@ -7,18 +7,21 @@ const app = new App({
   token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
   appToken: JSON.parse(process.env.SLACK_CREDS).SLACK_APP_TOKEN,
   socketMode: true
-});
+})
 
 // starting app
-(async () => {
-  await app.start(process.env.PORT || 3000)
-
-  console.log('⚡️ Bolt app is currently running!')
-})()
+app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is currently running!'))
 
 // connect to database
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
-mongoose.connect(`mongodb://${db}:27017/test`)
+mongoose.connect(`mongodb://${db}:27017/test`).then(
+  () => {
+    console.log('Successfully connected to db')
+  },
+  err => {
+    console.log('Could not connect to db. Error: ' + err)
+  }
+)
 
 /* Below is an example of how to interact with the database using Mongoose
 
