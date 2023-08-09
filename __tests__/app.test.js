@@ -1,8 +1,7 @@
-const { app } = require('../app')
-
-describe("app.js testing suite", () => {
-    test('Smoke test', () => {
-        console.log(app)
-        expect(1).toBe(1)
-    })
+/* eslint-env jest */
+// Add the above comment to all jest files so they don't fail linting due to no-undef
+describe('app.js testing suite', () => {
+  test('Smoke test', () => {
+    expect(1).toBe(1)
+  })
 })
