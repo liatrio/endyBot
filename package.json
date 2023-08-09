@@ -4,7 +4,8 @@
   "description": "A slack bot that organizes EOD posts",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
