@@ -1,0 +1,26 @@
+name: lint-and-test
+
+on:
+  push:
+    branches: [ "main", "lint-and-test-workflow" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Verify all .js files pass linting
+      # - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: eslint --all-files
+
+      - name: Verify testing suite passes
+        run: npm run test
