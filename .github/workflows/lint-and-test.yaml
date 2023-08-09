@@ -1,8 +1,6 @@
 name: lint-and-test
 
 on:
-  push:
-    branches: [ "main", "lint-and-test-workflow" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -24,3 +22,6 @@ jobs:
 
       - name: Verify testing suite passes
         run: npm run test
+
+      - name: Show testing coverage
+        run: npm run coverage
