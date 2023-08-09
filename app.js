@@ -14,3 +14,5 @@ const app = new App({
 
   console.log('⚡️ Bolt app is running!')
 })()
+
+module.exports = { app }
