@@ -6,3 +6,7 @@ services:
       - 3000:3000
     env_file:
       - .env
+  db:
+    image: mongodb/mongodb-community-server
+    ports:
+      - 27017:27017
