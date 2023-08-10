@@ -12,6 +12,9 @@ RUN npm install
 #Copy over all needed files
 COPY app.js ./
 
+#Copy over db files
+COPY /db ./db
+
 #Expose port
 EXPOSE 3000
 
