@@ -17,6 +17,11 @@ env:
   CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}                # set this to the name of the container in the
                                                            # containerDefinitions section of your task definition
 
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
 jobs:
   deploy:
     name: Deploy
