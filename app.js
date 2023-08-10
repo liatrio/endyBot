@@ -1,5 +1,6 @@
 const { App } = require('@slack/bolt')
 const mongoose = require('mongoose')
+// const { Schema, model } = mongoose
 require('dotenv').config()
 
 // setting up app
@@ -39,5 +40,17 @@ another.save().then(() => console.log('another added'))
 // querying the database
 const returned = BModel.find({name: 'Hello!'})
 returned.then(() => console.log(returned)) */
+
+/**
+ * dm group creation
+ * needs: our client token, users
+ */
+
+// const createDmGroup = (/* we need to pass our users in here */) => {
+//   const users = [] // this will hold the users passed into the func
+//   app.client.conversations.open({ // this is the api call to create a group dm
+
+//   })
+// }
 
 module.exports = { app }
