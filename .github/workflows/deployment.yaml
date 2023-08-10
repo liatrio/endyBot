@@ -65,7 +65,7 @@ jobs:
       - name: Stop currently running task
         run: | 
           echo "TASK_ID=$(aws ecs list-tasks --cluster endyBot_cluster --service app --desired-status RUNNING --output json | jq -r '.taskArns[]' | sed 's|.*/||')" >> $GITHUB_ENV
-          aws ecs stop-task --cluster endyBot_cluster --task $TASK_ID
+          aws ecs stop-task --cluster endyBot_cluster --task ${{ env.TASK_ID }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
