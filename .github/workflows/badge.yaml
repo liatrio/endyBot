@@ -17,6 +17,7 @@ jobs:
 
       - name: Get the coverage
         run: |
+            npm install
             chmod +x scripts/get-coverage.sh
             echo "COVERAGE=$(./scripts/get-coverage.sh 2>/dev/null)" >> $GITHUB_ENV
 
