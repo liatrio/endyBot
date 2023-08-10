@@ -16,7 +16,7 @@ const { Schema, model } = mongoose
  * contain the name of the subscriber and a boolean for
  * whether or not they have been sent their post
  */
-const EodSchema = new Schema({
+const EodSchema = Schema({
   group: [{
     groupName: String,
     post: [{
@@ -38,5 +38,7 @@ const EodSchema = new Schema({
 
 // saving our schema into a var
 const EodModel = model('eodSchema', EodSchema)
-const Test = new EodModel()
-await Test.save()
+// const Test = new EodModel()
+// await Test.save()
+
+module.exports = { EodModel }
