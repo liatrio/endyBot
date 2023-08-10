@@ -1,3 +1,6 @@
+[![lint-and-test](https://github.com/liatrio/endyBot/actions/workflows/lint-and-test.yaml/badge.svg)](https://github.com/liatrio/endyBot/actions/workflows/lint-and-test.yaml)
+![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/cfculler/63bc4aeca2dedc9ee2c05ee997adc7fa/raw/coverage.json)
+
 # endyBot
 Immortal Hedgehogs Hello DevOps project. endyBot is an EOD post manager that ensures consistent structure, and organizes EOD threads by sending them directly to interested parties.
 
