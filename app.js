@@ -23,17 +23,17 @@ mongoose.connect(`mongodb://${db}:27017/test`).then(
   }
 )
 
-/* Below is an example of how to interact with the database using Mongoose
+/* Below is an example of how to interact with the database using Mongoose */
 
 // creating a model
 const BModel = mongoose.model('BModel', { name: String })
 
 // creating an entry for the model and saving it
-const kitty = new BModel({name: 'Zildjian'})
-kitty.save().then(() => console.log('meow'))
+const testEnt = new BModel({ name: 'Deployment working' })
+testEnt.save().then(() => console.log('meow'))
 
 // creating another entry and saving it
-const another = new BModel({name: 'Hello!'})
+/* const another = new BModel({name: 'Hello!'})
 another.save().then(() => console.log('another added'))
 
 // querying the database
