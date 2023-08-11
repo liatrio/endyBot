@@ -1,5 +1,8 @@
 const { App } = require('@slack/bolt')
-const mongoose = require('mongoose')
+const { mongoose } = require('mongoose')
+// const User = require('./db/user')
+// const Post = require('./db/post')
+// const Group = require('./db/group')
 require('dotenv').config()
 
 // setting up app
@@ -14,7 +17,7 @@ app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is current
 
 // connect to database
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
-mongoose.connect(`mongodb://${db}:27017/test`).then(
+mongoose.connect(`mongodb://${db}:27017/endybot`).then(
   () => {
     console.log('Successfully connected to db')
   },
@@ -23,21 +26,53 @@ mongoose.connect(`mongodb://${db}:27017/test`).then(
   }
 )
 
-/* Below is an example of how to interact with the database using Mongoose
+/* Code below populates some test data into the db
 
-// creating a model
-const BModel = mongoose.model('BModel', { name: String })
+const user1 = new User({
+  slackId: '12345',
+  fullName: 'John Doe',
+  displayName: 'johnd'
+})
 
-// creating an entry for the model and saving it
-const testEnt = new BModel({ name: 'Deployment working' })
-testEnt.save().then(() => console.log('meow'))
+const user2 = new User({
+  slackId: '678',
+  fullName: 'John Noe',
+  displayName: 'johnn'
+})
 
-// creating another entry and saving it
-const another = new BModel({name: 'Hello!'})
-another.save().then(() => console.log('another added'))
+const user3 = new User({
+  slackId: '91011',
+  fullName: 'John Soe',
+  displayName: 'johns'
+})
 
-// querying the database
-const returned = BModel.find({name: 'Hello!'})
-returned.then(() => console.log(returned)) */
+const user4 = new User({
+  slackId: '121314',
+  fullName: 'John Moe',
+  displayName: 'johnm'
+})
+
+user1.save()
+user2.save()
+user3.save()
+user4.save()
+
+const group = new Group({
+  name: 'The best group',
+  contributors: [user1, user2],
+  subscribers: [user3, user4]
+})
+
+group.save()
+
+const post = new Post({
+  date: Date.now(),
+  message: "I was so productive today it was craaaazy",
+  poster: user2,
+  group: group
+})
+
+post.save()
+*/
 
 module.exports = { app }

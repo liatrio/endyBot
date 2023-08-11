@@ -10,3 +10,9 @@ services:
     image: mongodb/mongodb-community-server
     ports:
       - 27017:27017
+    ##Uncomment the comments below for your local db to be persistent 
+    #volumes: 
+    #  - endybot_db:/data/db
+
+#volumes:
+#  endybot_db:
