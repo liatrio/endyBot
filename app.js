@@ -24,6 +24,14 @@ mongoose.connect(`mongodb://${db}:27017/test`).then(
   }
 )
 
+// The echo command simply echoes on command
+app.command('/', async ({ command, ack, respond }) => {
+  // Acknowledge command request
+  await ack()
+
+  await respond(`${command.text}`)
+})
+
 /* Below is an example of how to interact with the database using Mongoose
 
 // creating a model
@@ -44,6 +52,8 @@ returned.then(() => console.log(returned)) */
 /**
  * dm group creation
  * needs: our client token, users
+ * prolly needs a helper to grab users but idk we could just make it a slash command that
+ * does it all
  */
 
 // const createDmGroup = (/* we need to pass our users in here */) => {
