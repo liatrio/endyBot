@@ -1,13 +1,13 @@
-const { App } = require('@slack/bolt')
+const { App, LogLevel } = require('@slack/bolt')
 const mongoose = require('mongoose')
-// const { Schema, model } = mongoose
 require('dotenv').config()
 
 // setting up app
 const app = new App({
   token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
   appToken: JSON.parse(process.env.SLACK_CREDS).SLACK_APP_TOKEN,
-  socketMode: true
+  socketMode: true,
+  LogLevel: LogLevel.DEBUG
 })
 
 // starting app
@@ -24,13 +24,45 @@ mongoose.connect(`mongodb://${db}:27017/test`).then(
   }
 )
 
-// The echo command simply echoes on command
-app.command('/', async ({ command, ack, respond }) => {
-  // Acknowledge command request
+/**
+ * slash command stuff
+ * eventually i think we should have an array of commands that will be passed in to determine what func to call
+ * for now im just making it for the group creation
+ * i think this should work but im not too sure how were testing our actual slack app
+ */
+
+app.command('/createGroup', async ({ command, ack, respond }) => {
   await ack()
 
-  await respond(`${command.text}`)
+  // parsing our command via white space
+  const userIDs = command.text.split(' ')
+
+  // we store the response sent to us from the request to create a convo group
+  const groupRes = await app.client.conversations.create({
+    token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
+    name: 'endybot-test-group'
+  })
+
+  // mapping our
+  const invites = userIDs.map(userId =>
+    app.client.conversations.invite({
+      token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
+      channel: groupRes.channel.id,
+      users: userId
+    })
+  )
+  await Promise.all(invites)
+
+  await respond(`User group created with ${userIDs.length} members!`)
 })
+
+/**
+ * creating user group
+ */
+
+// const createGroup = () => {
+//   app.client.usergroups.create(token, 'test group')
+// }
 
 /* Below is an example of how to interact with the database using Mongoose
 
@@ -38,8 +70,8 @@ app.command('/', async ({ command, ack, respond }) => {
 const BModel = mongoose.model('BModel', { name: String })
 
 // creating an entry for the model and saving it
-const kitty = new BModel({name: 'Zildjian'})
-kitty.save().then(() => console.log('meow'))
+const testEnt = new BModel({ name: 'Deployment working' })
+testEnt.save().then(() => console.log('meow'))
 
 // creating another entry and saving it
 const another = new BModel({name: 'Hello!'})
@@ -48,19 +80,5 @@ another.save().then(() => console.log('another added'))
 // querying the database
 const returned = BModel.find({name: 'Hello!'})
 returned.then(() => console.log(returned)) */
-
-/**
- * dm group creation
- * needs: our client token, users
- * prolly needs a helper to grab users but idk we could just make it a slash command that
- * does it all
- */
-
-// const createDmGroup = (/* we need to pass our users in here */) => {
-//   const users = [] // this will hold the users passed into the func
-//   app.client.conversations.open({ // this is the api call to create a group dm
-
-//   })
-// }
 
 module.exports = { app }
