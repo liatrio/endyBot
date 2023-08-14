@@ -17,6 +17,11 @@ env:
   CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}                # set this to the name of the container in the
                                                            # containerDefinitions section of your task definition
 
+permissions:
+  id-token: write
+  contents: read
+  packages: write
+
 jobs:
   deploy:
     name: Deploy
@@ -56,6 +61,12 @@ jobs:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
+          
+      - name: Get ID of currently running task
+        run: echo "TASK_ID=$(aws ecs list-tasks --cluster endyBot_cluster --service app --desired-status RUNNING --output json | jq -r '.taskArns[]' | sed 's|.*/||')" >> "$GITHUB_ENV"
+        
+      - name: Stop old task
+        run: aws ecs stop-task --cluster endyBot_cluster --task ${{ env.TASK_ID }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
