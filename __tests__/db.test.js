@@ -33,6 +33,9 @@ describe('group.js testing suite', () => {
       ],
       subscribers: [
         '64d673690981ecaae72f0733'
+      ],
+      admins: [
+        '64d673690981ecaae72f0733'
       ]
     }
 
