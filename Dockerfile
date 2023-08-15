@@ -16,8 +16,5 @@ COPY /db ./db
 #Expose port
 EXPOSE 3000
 
-#Run tests
-RUN npm run test
-
 #Run app
 ENTRYPOINT npm start
