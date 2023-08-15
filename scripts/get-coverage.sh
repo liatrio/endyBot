@@ -1,8 +1,6 @@
 #!/bin/bash
 
-TEMP=`(npm run coverage | tail -n 3 | head -n 1 | awk -F'|' '{print $5}')` 2>/dev/null
-
-TEMP=$(echo "$TEMP" | awk '{$1=$1; print}')
+TEMP=`npm run coverage 2>/dev/null | tail | grep Lines | awk '{print $3}'`
 
 # Print the coverage percentage
 echo "$TEMP"
