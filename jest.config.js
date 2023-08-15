@@ -3,6 +3,7 @@ module.exports = {
   // Add any other Jest configuration options here as needed
 
   collectCoverage: true,
+  coverageReporters: ['lcov', 'text-summary'],
   coverageThreshold: {
     global: {
       lines: 80
