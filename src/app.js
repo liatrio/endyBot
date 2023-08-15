@@ -23,7 +23,7 @@ mongoose.connect(`mongodb://${db}:27017/endybot`).then(
   }
 )
 
-app.command('/endybot', async ({ command, ack, respond }) => {
+app.command('/endybot-dev', async ({ command, ack, respond }) => {
   await ack()
 
   switch (command) {
@@ -34,7 +34,7 @@ app.command('/endybot', async ({ command, ack, respond }) => {
       // respond to user ("added group x with users a, b, c to channel y" or "failed to create group x")
       break
     default:
-      respond(`Command ${command} not found`)
+      respond(`Command ${command.text} not found`)
       break
   }
 })
