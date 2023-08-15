@@ -2,46 +2,23 @@
 // Add the above comment to all jest files so they don't fail linting due to no-undef
 
 const mockingoose = require('mockingoose')
-const Group = require('../db/group')
-const User = require('../db/user')
-const Post = require('../db/post')
-
-describe('user.js testing suite', () => {
-  test('Create a user', () => {
-    const _usr = {
-      _id: '64d673690981ecaae72f0733',
-      slackId: '12345',
-      fullName: 'John Doe',
-      displayName: 'john'
-    }
-
-    mockingoose(User).toReturn(_usr, 'findOne')
-
-    return User.findById({ _id: '64d673690981ecaae72f0733' }).then(usr => {
-      expect(JSON.parse(JSON.stringify(usr))).toMatchObject(_usr)
-    })
-  })
-})
+const Group = require('../db-schemas/group')
+const Post = require('../db-schemas/post')
 
 describe('group.js testing suite', () => {
   test('Create a group', () => {
     const _group = {
-      _id: '64d6761729773eb8f3852e74',
+      _id: '64dbee9baf23d8dc32bcbad3',
       name: 'Test Group',
-      contributors: [
-        '64d673690981ecaae72f0733'
-      ],
-      subscribers: [
-        '64d673690981ecaae72f0733'
-      ],
-      admins: [
-        '64d673690981ecaae72f0733'
-      ]
+      contributors: ['UID12345'],
+      subscribers: ['UID56789'],
+      postTime: 0,
+      channel: '#test-channel'
     }
 
     mockingoose(Group).toReturn(_group, 'findOne')
 
-    return Group.findById({ _id: '64d6761729773eb8f3852e74' }).then(group => {
+    return Group.findById({ _id: '64dbee9baf23d8dc32bcbad3' }).then(group => {
       expect(JSON.parse(JSON.stringify(group))).toMatchObject(_group)
     })
   })
@@ -50,16 +27,16 @@ describe('group.js testing suite', () => {
 describe('post.js testing suite', () => {
   test('Create a post', () => {
     const _post = {
-      _id: '64d69c815bcb0bf619d482a3',
-      date: '2023-08-11T08:00:00.000Z',
-      message: 'This is my EOD post.',
-      poster: '64d673690981ecaae72f0733',
-      group: '64d6761729773eb8f3852e74'
+      _id: '64dbef208a2f7500247b374b',
+      content: ['This is my EOD post!'],
+      threadID: 'THRDID12345',
+      group: '64dbee9baf23d8dc32bcbad3',
+      author: 'UID12345'
     }
 
     mockingoose(Post).toReturn(_post, 'findOne')
 
-    return Post.findById({ _id: '64d69c815bcb0bf619d482a3' }).then(post => {
+    return Post.findById({ _id: '64dbef208a2f7500247b374b' }).then(post => {
       expect(JSON.parse(JSON.stringify(post))).toMatchObject(_post)
     })
   })

@@ -5,6 +5,7 @@
 // If you're expecting more fields than what is listed below in the code, add it here
 module.exports = {
   App: jest.fn(() => ({
-    start: jest.fn(() => Promise.resolve())
+    start: jest.fn(() => Promise.resolve()),
+    command: jest.fn(() => Promise.resolve())
   }))
 }
