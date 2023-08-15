@@ -2,9 +2,9 @@
   "name": "endybot",
   "version": "1.0.0",
   "description": "A slack bot that organizes EOD posts",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node src/app.js",
     "test": "jest",
     "coverage": "jest --coverage"
   },
