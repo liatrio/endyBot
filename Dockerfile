@@ -11,7 +11,7 @@ RUN npm install
 
 #Copy over all needed files
 COPY src ./src
-COPY /db ./db
+COPY /db-schemas ./db-schemas
 
 #Expose port
 EXPOSE 3000
