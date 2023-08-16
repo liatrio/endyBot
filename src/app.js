@@ -1,4 +1,5 @@
 const { App } = require('@slack/bolt')
+
 require('dotenv').config()
 const database = require('./db.js')
 
@@ -16,17 +17,28 @@ app.command('/endybot-dev', async ({ command, ack, respond }) => {
   await ack()
 
   switch (command.text) {
-    case 'create':
+    case 'create':{
       // send user the form (return filled out form)
       // parse form (filled out form -> function -> json object {groupName, contributor list, subscriber list, postTime, channel})
       // use form input to create group in db (json object from above -> function -> json obj {groupName, contributors list, subscribers list, channel, success})
-      // respond to user ("added group x with users a, b, c to channel y" or "failed to create group x")
-      break
+
+      const groupID = await database.addToDB()
+
+      if (groupID) {
+        console.log('great success')
+        break
+      } else {
+        console.log('great failure')
+        break
+      }
+    }
+
     case 'list': {
       const data = await database.listGroups()
       respond(`${data}`)
       break
     }
+
     default:
       respond(`Command ${command.text} not found`)
       break

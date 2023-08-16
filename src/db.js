@@ -3,6 +3,16 @@ const Group = require('../db-schemas/group.js')
 
 // Put all functions interacting with the database here
 
+async function addToDB (groupJson) {
+  try {
+    const inserted = await Group.create(groupJson)
+    return inserted._id
+  } catch (err) {
+    console.error('error adding to the database: ', err)
+    return null
+  }
+}
+
 // connect to database
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
 mongoose.connect(`mongodb://${db}:27017/endybot`).then(
@@ -29,4 +39,4 @@ async function listGroups () {
   return stringedResult
 }
 
-module.exports = { listGroups }
+module.exports = { addToDB, listGroups }
