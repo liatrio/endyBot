@@ -13,7 +13,6 @@ afterEach(() => {
 })
 const { listGroups } = require('../src/db')
 
-
 describe('group.js testing suite', () => {
   test('Create a group', () => {
     const _group = {

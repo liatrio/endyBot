@@ -1,5 +1,4 @@
 const { App } = require('@slack/bolt')
-const { mongoose } = require('mongoose')
 
 require('dotenv').config()
 const database = require('./db.js')
@@ -17,7 +16,7 @@ app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is current
 app.command('/endybot-dev', async ({ command, ack, respond }) => {
   await ack()
 
-    switch (command.text) {
+  switch (command.text) {
     case 'create':{
       // send user the form (return filled out form)
       // parse form (filled out form -> function -> json object {groupName, contributor list, subscriber list, postTime, channel})
@@ -25,15 +24,15 @@ app.command('/endybot-dev', async ({ command, ack, respond }) => {
 
       const groupID = await database.addToDB()
 
-      if (groupID) { 
-        console.log("great success")
+      if (groupID) {
+        console.log('great success')
         break
-      } else { 
-        console.log("great failure") 
-        break 
+      } else {
+        console.log('great failure')
+        break
       }
     }
-   
+
     case 'list': {
       const data = await database.listGroups()
       respond(`${data}`)
