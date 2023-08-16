@@ -1,7 +1,7 @@
 const { App } = require('@slack/bolt')
 const slack = require('./slack')
-require('dotenv').config()
 const database = require('./db.js')
+require('dotenv').config()
 
 // setting up app
 const app = new App({
@@ -13,7 +13,13 @@ const app = new App({
 // starting app
 app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is currently running!'))
 
-app.command('/endybot-dev', async ({ command, ack, respond }) => {
+// determine slash command from dev value
+let slashcommand = '/endybot'
+if (process.env.DEV == 1) {
+  slashcommand = '/endybot-dev'
+}
+
+app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
   console.log(command)
