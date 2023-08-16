@@ -14,6 +14,7 @@ app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is current
 
 app.command('/endybot-dev', async ({ command, ack, respond }) => {
   await ack()
+
   switch (command.text) {
     case 'create':
       // send user the form (return filled out form)
