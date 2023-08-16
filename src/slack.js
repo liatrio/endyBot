@@ -8,7 +8,7 @@ async function sendCreateModal (app, triggerId) {
       callback_id: 'create-group-view',
       title: {
         type: 'plain_text',
-        text: 'My App',
+        text: 'endyBot',
         emoji: true
       },
       submit: {
@@ -26,7 +26,7 @@ async function sendCreateModal (app, triggerId) {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: 'Please enter the following information to create a new EOD group'
+            text: 'Please enter the following information to create a *new EOD group*'
           }
         },
         {
@@ -57,7 +57,7 @@ async function sendCreateModal (app, triggerId) {
           },
           label: {
             type: 'plain_text',
-            text: ':well: Contributors',
+            text: 'Contributors',
             emoji: true
           }
         },
@@ -82,7 +82,7 @@ async function sendCreateModal (app, triggerId) {
           type: 'input',
           element: {
             type: 'timepicker',
-            initial_time: '13:37',
+            initial_time: '16:00',
             placeholder: {
               type: 'plain_text',
               text: 'Select time',
