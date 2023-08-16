@@ -13,8 +13,6 @@ async function addToDB (groupJson) {
   }
 }
 
-
-
 // connect to database
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
 mongoose.connect(`mongodb://${db}:27017/endybot`).then(
