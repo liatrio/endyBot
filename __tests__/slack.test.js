@@ -3,23 +3,36 @@ const slack = require('../src/slack')
 const { App } = require('@slack/bolt')
 
 describe('slack.js testing suite', () => {
-  describe('sendForm test', () => {
-    let app = {}
-    beforeEach(() => {
-      app = new App({})
-    })
-    test('Open channel successful', async () => {
-      function channelOpen () {
-        const retObj = {
-          ok: true,
-          channel: { id: 'CH12345' }
+  describe('sendCreateModal tests', () => {
+    test('Modal send successfully', async () => {
+      function success () {
+        const res = {
+          ok: true
         }
-
-        return retObj
+        return res
       }
 
-      app.client.conversations.open.mockImplementation(channelOpen)
-      expect(await slack.sendCreateForm(app, '')).toEqual(0)
+      const app = new App({})
+      app.client.views.open.mockImplementation(success)
+      const res = await slack.sendCreateModal(app, '12345')
+
+      expect(res).toEqual(0)
+    })
+
+    test('Modal send successfully', async () => {
+      function failure () {
+        const res = {
+          ok: false,
+          error: 'Sample error'
+        }
+        return res
+      }
+
+      const app = new App({})
+      app.client.views.open.mockImplementation(failure)
+      const res = await slack.sendCreateModal(app, '12345')
+
+      expect(res).toEqual(-1)
     })
   })
 })

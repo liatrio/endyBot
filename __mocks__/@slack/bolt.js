@@ -8,7 +8,7 @@ module.exports = {
     start: jest.fn(() => Promise.resolve()),
     command: jest.fn(() => Promise.resolve()),
     client: {
-      conversations: {
+      views: {
         open: jest.fn(() => Promise.resolve())
       }
     }
