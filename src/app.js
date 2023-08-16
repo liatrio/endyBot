@@ -22,8 +22,6 @@ if (process.env.DEV == 1) {
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
-  console.log(command)
-
   switch (command.text) {
     case 'create':{
       // send user the form (return filled out form)
