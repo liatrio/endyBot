@@ -4,6 +4,7 @@ module.exports = {
 
   collectCoverage: true,
   coverageReporters: ['lcov', 'text-summary'],
+  collectCoverageFrom: ['./src/db.js', './src/slack.js'],
   coverageThreshold: {
     global: {
       lines: 75
