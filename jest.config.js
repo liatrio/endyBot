@@ -4,6 +4,7 @@ module.exports = {
 
   collectCoverage: true,
   coverageReporters: ['lcov', 'text-summary'],
+  testPathIgnorePatterns: ['./src/app.js'],
   coverageThreshold: {
     global: {
       lines: 75

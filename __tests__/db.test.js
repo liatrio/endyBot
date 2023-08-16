@@ -11,6 +11,8 @@ const { addToDB } = require('../src/db')
 afterEach(() => {
   mockingoose.resetAll()
 })
+const { listGroups } = require('../src/db')
+
 
 describe('group.js testing suite', () => {
   test('Create a group', () => {
@@ -27,6 +29,45 @@ describe('group.js testing suite', () => {
     return Group.findById({ _id: '64dbee9baf23d8dc32bcbad3' }).then(group => {
       expect(JSON.parse(JSON.stringify(group))).toMatchObject(_group)
     })
+  })
+
+  test('List groups from DB', async () => {
+    const groups = [
+      {
+        name: 'Group 1',
+        contributors: ['UID123', 'UID456'],
+        subscribers: ['UIS789'],
+        postTime: 0,
+        channel: '#ex-channel'
+      },
+      {
+        name: 'Group 2',
+        contributors: ['UID123'],
+        subscribers: ['UIS789'],
+        postTime: 0,
+        channel: '#ex-channel'
+      },
+      {
+        name: 'Group 3',
+        contributors: ['UID123', 'UID456', 'UID789'],
+        subscribers: ['UIS789'],
+        postTime: 0,
+        channel: '#ex-channel'
+      }
+    ]
+
+    mockingoose(Group).toReturn(groups, 'find')
+
+    const result = await listGroups()
+
+    expect(result).toBe('Group 1 --- Num Members: 2\nGroup 2 --- Num Members: 1\nGroup 3 --- Num Members: 3\n')
+  })
+
+  test('No groups returned from DB', async () => {
+    const groups = []
+    mockingoose(Group).toReturn(groups, 'find')
+    const result = await listGroups()
+    expect(result).toBe('No groups to be listed')
   })
 })
 
