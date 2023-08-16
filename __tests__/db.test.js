@@ -6,6 +6,12 @@ const Group = require('../db-schemas/group')
 const Post = require('../db-schemas/post')
 const { addToDB } = require('../src/db')
 
+// i added this to ensure that our tests dont interfere with eachother
+// it resets the DB after each test
+afterEach(() => {
+  mockingoose.resetAll()
+})
+
 describe('group.js testing suite', () => {
   test('Create a group', () => {
     const _group = {
@@ -43,7 +49,7 @@ describe('post.js testing suite', () => {
 })
 
 describe('addToDB function', () => {
-  it('should add a group to the database and return its ID', async () => {
+  test('should add a group to the database and return its ID', async () => {
     const fakeGroup = {
       name: 'test-group',
       contributors: ['keoni', 'mikayla', 'carson'],
