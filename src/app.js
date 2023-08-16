@@ -24,14 +24,6 @@ mongoose.connect(`mongodb://${db}:27017/endybot`).then(
   }
 )
 
-const fakeGroup = {
-  name: 'test-group',
-  contributors: ['keoni', 'mikayla', 'carson'],
-  subscribers: ['josh'],
-  postTime: 5,
-  channel: 'fake-channel'
-}
-
 app.command('/endybot', async ({ command, ack, respond }) => {
   await ack()
 
@@ -41,7 +33,7 @@ app.command('/endybot', async ({ command, ack, respond }) => {
       // parse form (filled out form -> function -> json object {groupName, contributor list, subscriber list, postTime, channel})
       // use form input to create group in db (json object from above -> function -> json obj {groupName, contributors list, subscribers list, channel, success})
 
-      const groupID = await addToDB(fakeGroup)
+      const groupID = await addToDB()
 
       if (groupID) { return 1 } else { return null }
     }

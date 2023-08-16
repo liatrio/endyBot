@@ -4,6 +4,7 @@
 const mockingoose = require('mockingoose')
 const Group = require('../db-schemas/group')
 const Post = require('../db-schemas/post')
+const { addToDB } = require('../src/db')
 
 describe('group.js testing suite', () => {
   test('Create a group', () => {
@@ -17,7 +18,6 @@ describe('group.js testing suite', () => {
     }
 
     mockingoose(Group).toReturn(_group, 'findOne')
-
     return Group.findById({ _id: '64dbee9baf23d8dc32bcbad3' }).then(group => {
       expect(JSON.parse(JSON.stringify(group))).toMatchObject(_group)
     })
@@ -39,5 +39,23 @@ describe('post.js testing suite', () => {
     return Post.findById({ _id: '64dbef208a2f7500247b374b' }).then(post => {
       expect(JSON.parse(JSON.stringify(post))).toMatchObject(_post)
     })
+  })
+})
+
+describe('addToDB function', () => {
+  it('should add a group to the database and return its ID', async () => {
+    const fakeGroup = {
+      name: 'test-group',
+      contributors: ['keoni', 'mikayla', 'carson'],
+      subscribers: ['josh'],
+      postTime: 5,
+      channel: 'fake-channel'
+    }
+    let id
+    // Mock the create operation to return a mock group with the provided ID
+    mockingoose(Group).toReturn({ _id: id }, 'create')
+
+    const result = await addToDB(fakeGroup)
+    expect(result).not.toBeNull()
   })
 })
