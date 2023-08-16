@@ -36,7 +36,7 @@ app.command('/endybot-dev', async ({ command, ack, respond }) => {
       // respond to user ("added group x with users a, b, c to channel y" or "failed to create group x")
       break
     default:
-      respond(`Command ${command} not found`)
+      respond(`Command ${command.text} not found`)
       break
   }
 })
