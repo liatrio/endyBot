@@ -1,5 +1,6 @@
 const { App } = require('@slack/bolt')
 const { mongoose } = require('mongoose')
+const slack = require('./slack')
 require('dotenv').config()
 
 // setting up app
@@ -23,12 +24,13 @@ mongoose.connect(`mongodb://${db}:27017/endybot`).then(
   }
 )
 
-app.command('/endybot', async ({ command, ack, respond }) => {
+app.command('/endybot-dev', async ({ command, ack, respond }) => {
   await ack()
 
-  switch (command) {
+  switch (command.text) {
     case 'create':
       // send user the form (return filled out form)
+      slack.sendCreateForm(app, command.user_id)
       // parse form (filled out form -> function -> json object {groupName, contributor list, subscriber list, postTime, channel})
       // use form input to create group in db (json object from above -> function -> json obj {groupName, contributors list, subscribers list, channel, success})
       // respond to user ("added group x with users a, b, c to channel y" or "failed to create group x")

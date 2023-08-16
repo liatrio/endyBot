@@ -6,6 +6,11 @@
 module.exports = {
   App: jest.fn(() => ({
     start: jest.fn(() => Promise.resolve()),
-    command: jest.fn(() => Promise.resolve())
+    command: jest.fn(() => Promise.resolve()),
+    client: {
+      conversations: {
+        open: jest.fn(() => Promise.resolve())
+      }
+    }
   }))
 }
