@@ -83,4 +83,28 @@ describe('slack.js testing suite', () => {
       expect(res).toStrictEqual(expected)
     })
   })
+
+  describe('createPost test', () => {
+    let mockApp
+
+    beforeEach(() => {
+      mockApp = new App({})
+    })
+
+    test('test that a post is created and an id is returned', async () => {
+      const mockGroup = {
+        channel: 'C1234',
+        name: 'test group'
+      }
+
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234' })
+      const res = await slack.createPost(mockGroup)
+      expect(res).toBe('1234')
+      expect(mockApp.client.chat.postMessage({
+        channel: 'C1234567890',
+        text: 'Test Group is a test message :thread:'
+      })
+      )
+    })
+  })
 })
