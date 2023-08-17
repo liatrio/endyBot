@@ -3,6 +3,16 @@ const Group = require('../db-schemas/group.js')
 
 // Put all functions interacting with the database here
 
+// connect to database
+const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
+mongoose.connect(`mongodb://${db}:27017/endybot`).then(
+  () => {
+    console.log('Successfully connected to db')
+  },
+  err => {
+    console.log('Could not connect to db. Error: ' + err)
+  })
+
 async function addToDB (groupJson) {
   try {
     const inserted = await Group.create(groupJson)
@@ -12,18 +22,6 @@ async function addToDB (groupJson) {
     return null
   }
 }
-
-// connect to database
-const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
-mongoose.connect(`mongodb://${db}:27017/endybot`).then(
-  () => {
-    console.log('Successfully connected to db')
-  },
-  err => {
-    console.log('Could not connect to db. Error: ' + err)
-  }
-)
-
 // List all group names and how many members they have
 async function listGroups () {
   const groups = await Group.find({})
@@ -39,4 +37,9 @@ async function listGroups () {
   return stringedResult
 }
 
-module.exports = { addToDB, listGroups }
+async function getChannel () {
+  const group = await Group.findOne({ name: 'Immortal HedgeHogs' })
+  return group.channel
+}
+
+module.exports = { addToDB, listGroups, getChannel }
