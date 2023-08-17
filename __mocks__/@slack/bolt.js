@@ -9,7 +9,8 @@ module.exports = {
     command: jest.fn(() => Promise.resolve()),
     client: {
       views: {
-        open: jest.fn(() => Promise.resolve())
+        open: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve())
       }
     }
   }))
