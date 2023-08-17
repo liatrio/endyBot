@@ -36,13 +36,14 @@ async function sendCreateModal (app, triggerId) {
           type: 'input',
           element: {
             type: 'plain_text_input',
-            action_id: 'group-create-name'
+            action_id: 'group_create_name'
           },
           label: {
             type: 'plain_text',
             text: 'Group Name',
             emoji: true
-          }
+          },
+          block_id: 'group_name'
         },
         {
           type: 'input',
@@ -53,13 +54,14 @@ async function sendCreateModal (app, triggerId) {
               text: 'Select contributors',
               emoji: true
             },
-            action_id: 'group-create-contributors'
+            action_id: 'group_create_contributors'
           },
           label: {
             type: 'plain_text',
             text: 'Contributors',
             emoji: true
-          }
+          },
+          block_id: 'contributors'
         },
         {
           type: 'input',
@@ -70,13 +72,14 @@ async function sendCreateModal (app, triggerId) {
               text: 'Select users',
               emoji: true
             },
-            action_id: 'group-create-subscribers'
+            action_id: 'group_create_subscribers'
           },
           label: {
             type: 'plain_text',
             text: 'Subscribers',
             emoji: true
-          }
+          },
+          block_id: 'subscribers'
         },
         {
           type: 'input',
@@ -88,13 +91,14 @@ async function sendCreateModal (app, triggerId) {
               text: 'Select time',
               emoji: true
             },
-            action_id: 'group-create-time'
+            action_id: 'group_create_time'
           },
           label: {
             type: 'plain_text',
             text: 'Time of day to remind contributors to make EOD post (their time)',
             emoji: true
-          }
+          },
+          block_id: 'create_time'
         },
         {
           type: 'input',
@@ -105,13 +109,14 @@ async function sendCreateModal (app, triggerId) {
               text: 'Select channel',
               emoji: true
             },
-            action_id: 'group-create-channel'
+            action_id: 'group_create_channel'
           },
           label: {
             type: 'plain_text',
             text: 'Channel of EOD thread',
             emoji: true
-          }
+          },
+          block_id: 'channel'
         }
       ]
     }
@@ -124,4 +129,23 @@ async function sendCreateModal (app, triggerId) {
   return 0
 }
 
-module.exports = { sendCreateModal }
+function parseCreateModal (view) {
+  try {
+    const rawTime = view.state.values.create_time.group_create_time.selected_time
+    const time = Number(rawTime.substring(0, 2))
+    const newGroup = {
+      name: view.state.values.group_name.group_create_name.value,
+      contributors: view.state.values.contributors.group_create_contributors.selected_users,
+      subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
+      postTime: time,
+      channel: view.state.values.channel.group_create_channel.selected_channel
+    }
+
+    return newGroup
+  } catch (err) {
+    console.log(`Unable to parse view. Please double-check the input. Error: ${err}`)
+    return null
+  }
+}
+
+module.exports = { sendCreateModal, parseCreateModal }
