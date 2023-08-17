@@ -1,8 +1,6 @@
 const { App } = require('@slack/bolt')
 require('dotenv').config()
 const database = require('./db.js')
-const slack = require('./slack')
-const cron = require('node-cron')
 
 // setting up app
 const app = new App({
@@ -46,16 +44,6 @@ app.command('/endybot-dev', async ({ command, ack, respond }) => {
       respond(`Command ${command.text} not found`)
       break
   }
-})
-
-/**
- * scheduler posts at 5pm pst
- * getchannel returns the channel id from the db
- * create post posts a message to the channel from the id passed in
- */
-cron.schedule('0 17 * * 1-5', () => {
-  const cId = database.getChannel()
-  slack.createPost(cId)
 })
 
 module.exports = { app }

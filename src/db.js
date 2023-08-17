@@ -37,9 +37,4 @@ async function listGroups () {
   return stringedResult
 }
 
-async function getChannel () {
-  const group = await Group.findOne({ name: 'Immortal HedgeHogs' })
-  return group.channel
-}
-
-module.exports = { addToDB, listGroups, getChannel }
+module.exports = { addToDB, listGroups }
