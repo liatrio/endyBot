@@ -24,20 +24,9 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
 
   switch (command.text) {
     case 'create':{
-      // send user the form (return filled out form)
+      // open group create modal
       slack.sendCreateModal(app, command.trigger_id)
-      // parse form (filled out form -> function -> json object {groupName, contributor list, subscriber list, postTime, channel})
-      // use form input to create group in db (json object from above -> function -> json obj {groupName, contributors list, subscribers list, channel, success})
-
-      const groupID = await database.addToDB()
-
-      if (groupID) {
-        console.log('great success')
-        break
-      } else {
-        console.log('great failure')
-        break
-      }
+      break
     }
 
     case 'list': {
@@ -50,6 +39,17 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       respond(`Command ${command.text} not found`)
       break
   }
+})
+
+app.view('create-group-view', async ({ view, ack }) => {
+  await ack()
+
+  // Parsing the response from the modal into a JSON to send to db
+  const newGroup = slack.parseCreateModal(view)
+
+  // Send new group info to db
+  const groupID = await database.addToDB(newGroup)
+  console.log(groupID)
 })
 
 module.exports = { app }
