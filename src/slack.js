@@ -4,7 +4,6 @@ async function createPost (app, group) {
     const cID = group.channel
     const groupname = group.name
     const threadId = await app.client.chat.postMessage({
-      token: app.token,
       channel: cID,
       text: `${groupname} is a test message :thread:`
     })
