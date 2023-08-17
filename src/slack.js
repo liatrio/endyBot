@@ -183,4 +183,3 @@ function parseCreateModal (view) {
 }
 
 module.exports = { sendCreateModal, parseCreateModal, dmUsers, createPost }
-
