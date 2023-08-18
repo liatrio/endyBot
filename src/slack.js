@@ -1,14 +1,15 @@
 // Put all functions using the slack API here
 async function createPost (app, group) {
+  console.log(group)
   try {
     const cID = group.channel
     const groupname = group.name
     const threadId = await app.client.chat.postMessage({
       channel: cID,
-      text: `${groupname} is a test message :thread:`
+      text: `${groupname} EOD :thread:`
     })
     console.log('thread created')
-    return threadId
+    return threadId.ts
   } catch (error) {
     console.error('something happened while making the thread: ', error)
     return null
@@ -16,8 +17,8 @@ async function createPost (app, group) {
 }
 
 async function dmUsers (app, users) {
-  for (const user of users) {
-    if (users.length() != 0) {
+  if (users.length != 0) {
+    for (const user of users) {
       try {
         app.client.chat.postMessage({
           channel: user,
@@ -26,11 +27,14 @@ async function dmUsers (app, users) {
         console.log('message sent')
       } catch (error) {
         console.error('something happened while sending dm: ', error)
+        continue
       }
-    } else {
-      console.log('no users in group ?')
     }
+  } else {
+    console.log('Error: no contributors in group')
+    return -1
   }
+  return 0
 }
 
 async function sendCreateModal (app, triggerId) {
