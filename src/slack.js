@@ -67,7 +67,7 @@ async function dmUsers (app, group) {
 async function sendCreateModal (app, triggerId) {
   const res = await app.client.views.open({
     trigger_id: triggerId,
-    view: views.group_create
+    view: views.groupCreate
   })
 
   if (res.ok != true) {
