@@ -7,6 +7,7 @@ const Schema = mongoose.Schema
  * name (String) - Name of the group
  * contributors (String) - List of SlackIDs of contributors
  * subscribers (String) - List of SlackIDs of subscribers
+ *
  */
 const groupSchema = Schema({
   name: String,

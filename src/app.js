@@ -29,19 +29,22 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       slack.sendCreateModal(app, command.trigger_id)
       break
     }
-
     case 'list': {
       const data = await database.listGroups()
       respond(`${data}`)
       break
     }
-
+    case 'help': {
+      respond('hello there! theres not much to see here yet')
+      break
+    }
     default:
       respond(`Command ${command.text} not found`)
       break
   }
 })
 
+// listen for response from create-group-view modal
 app.view('create-group-view', async ({ view, ack }) => {
   await ack()
 
@@ -54,6 +57,34 @@ app.view('create-group-view', async ({ view, ack }) => {
 
   // Restart the cron scheduler to account for the new group
   schedule.scheduleCronJob(groupID)
+})
+
+// listen for response from EOD-response modal
+app.view('EOD-response', async ({ view, ack }) => {
+  await ack()
+
+  // handle response from EOD modal here
+})
+
+// listen for 'additional notes' button from EOD-reponse modal
+app.action('add_notes', async ({ ack, body }) => {
+  await ack()
+
+  slack.updateEODModal(app, body, 'notes')
+})
+
+// lisen for 'add blockers' button from EOD-response modal
+app.action('add_blockers', async ({ ack, body }) => {
+  await ack()
+
+  slack.updateEODModal(app, body, 'blockers')
+})
+
+// lisen for 'write eod' button from dm
+app.action('write_eod', async ({ ack, body }) => {
+  await ack()
+
+  slack.sendEODModal(app, body.trigger_id)
 })
 
 module.exports = { app }

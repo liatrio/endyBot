@@ -1,125 +1,73 @@
 // Put all functions using the slack API here
+const views = require('./modal-views')
+
+async function createPost (app, group) {
+  console.log(group)
+  try {
+    const cID = group.channel
+    const groupname = group.name
+    const threadId = await app.client.chat.postMessage({
+      channel: cID,
+      text: `${groupname} EOD :thread:`
+    })
+    console.log('thread created')
+    return threadId.ts
+  } catch (error) {
+    console.error('something happened while making the thread: ', error)
+    return null
+  }
+}
+
+async function dmUsers (app, group) {
+  if (group.contributors.length != 0) {
+    for (const user of group.contributors) {
+      try {
+        app.client.chat.postMessage({
+          channel: user,
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `It's time to write your EOD posts for *${group.name}!*`
+              }
+            },
+            {
+              type: 'divider'
+            },
+            {
+              type: 'actions',
+              elements: [
+                {
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Begin EOD Post',
+                    emoji: true
+                  },
+                  action_id: 'write_eod'
+                }
+              ]
+            }
+          ]
+        })
+        console.log('message sent')
+      } catch (error) {
+        console.error('something happened while sending dm: ', error)
+        continue
+      }
+    }
+  } else {
+    console.log('Error: no contributors in group')
+    return -1
+  }
+  return 0
+}
 
 async function sendCreateModal (app, triggerId) {
   const res = await app.client.views.open({
     trigger_id: triggerId,
-    view: {
-      type: 'modal',
-      callback_id: 'create-group-view',
-      title: {
-        type: 'plain_text',
-        text: 'endyBot',
-        emoji: true
-      },
-      submit: {
-        type: 'plain_text',
-        text: 'Submit',
-        emoji: true
-      },
-      close: {
-        type: 'plain_text',
-        text: 'Cancel',
-        emoji: true
-      },
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: 'Please enter the following information to create a *new EOD group*'
-          }
-        },
-        {
-          type: 'divider'
-        },
-        {
-          type: 'input',
-          element: {
-            type: 'plain_text_input',
-            action_id: 'group_create_name'
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Group Name',
-            emoji: true
-          },
-          block_id: 'group_name'
-        },
-        {
-          type: 'input',
-          element: {
-            type: 'multi_users_select',
-            placeholder: {
-              type: 'plain_text',
-              text: 'Select contributors',
-              emoji: true
-            },
-            action_id: 'group_create_contributors'
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Contributors',
-            emoji: true
-          },
-          block_id: 'contributors'
-        },
-        {
-          type: 'input',
-          element: {
-            type: 'multi_users_select',
-            placeholder: {
-              type: 'plain_text',
-              text: 'Select users',
-              emoji: true
-            },
-            action_id: 'group_create_subscribers'
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Subscribers',
-            emoji: true
-          },
-          block_id: 'subscribers'
-        },
-        {
-          type: 'input',
-          element: {
-            type: 'timepicker',
-            initial_time: '16:00',
-            placeholder: {
-              type: 'plain_text',
-              text: 'Select time',
-              emoji: true
-            },
-            action_id: 'group_create_time'
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Time of day to remind contributors to make EOD post (their time)',
-            emoji: true
-          },
-          block_id: 'create_time'
-        },
-        {
-          type: 'input',
-          element: {
-            type: 'channels_select',
-            placeholder: {
-              type: 'plain_text',
-              text: 'Select channel',
-              emoji: true
-            },
-            action_id: 'group_create_channel'
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Channel of EOD thread',
-            emoji: true
-          },
-          block_id: 'channel'
-        }
-      ]
-    }
+    view: views.groupCreate
   })
 
   if (res.ok != true) {
@@ -148,4 +96,60 @@ function parseCreateModal (view) {
   }
 }
 
-module.exports = { sendCreateModal, parseCreateModal }
+async function sendEODModal (app, triggerId) {
+  const res = await app.client.views.open({
+    trigger_id: triggerId,
+    view: views.eodDefault
+  })
+
+  if (res.ok != true) {
+    console.log(`Error opening modal: ${res.error}`)
+    return -1
+  }
+  return 0
+}
+
+function updateEODModal (app, body, toAdd) {
+  let targetView = 1 // represents default modal
+  const viewMap = {
+    1: views.eodDefault,
+    3: views.eodBlockers,
+    5: views.eodNotes,
+    7: views.eodBoth
+  }
+  // check which element we're adding
+  switch (toAdd) {
+    case 'blockers':
+      targetView += 2
+      break
+    case 'notes':
+      targetView += 4
+      break
+    default:
+      console.log('Attempting to add invalid block')
+      return -1
+  }
+
+  // check which elements are in the view already
+  if (body.view.blocks.length > 3) {
+    // default view only has 3 elements, not default. Set opposite bit so we have  both
+    switch (toAdd) {
+      case 'blockers':
+        targetView += 4
+        break
+      case 'notes':
+        targetView += 2
+        break
+    }
+  }
+
+  // update view
+  app.client.views.update({
+    view: viewMap[targetView],
+    view_id: body.view.id
+  })
+
+  return targetView
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }

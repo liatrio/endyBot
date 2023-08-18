@@ -83,4 +83,128 @@ describe('slack.js testing suite', () => {
       expect(res).toStrictEqual(expected)
     })
   })
+
+  describe('createPost test', () => {
+    let mockApp
+
+    beforeEach(() => {
+      mockApp = new App({})
+    })
+
+    test('test that a post is created and an id is returned', async () => {
+      const mockGroup = {
+        channel: 'C1234',
+        name: 'test group'
+      }
+
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234' })
+      const res = await slack.createPost(mockApp, mockGroup)
+      expect(res).toBe('1234')
+    })
+
+    test('handle error', async () => {
+      const mockGroup = {}
+
+      const res = await slack.createPost(mockApp, mockGroup)
+      expect(res).toBe(null)
+    })
+  })
+
+  describe('dmUsers  tests', () => {
+    let mockApp
+
+    beforeEach(() => {
+      mockApp = new App({})
+    })
+
+    test('Successfully sent conributor a DM', async () => {
+      const group = {
+        contributors: ['UID123', 'UID456']
+      }
+      const result = await slack.dmUsers(mockApp, group)
+      expect(result).toBe(0)
+    })
+
+    test('No contributors in group error', async () => {
+      const group = {
+        contributors: []
+      }
+      const result = await slack.dmUsers(mockApp, group)
+      expect(result).toBe(-1)
+    })
+  })
+
+  describe('sendEODModal tests', () => {
+    test('Modal send successfully', async () => {
+      function success () {
+        const res = {
+          ok: true
+        }
+        return res
+      }
+
+      const app = new App({})
+      app.client.views.open.mockImplementation(success)
+      const res = await slack.sendEODModal(app, '12345')
+
+      expect(res).toEqual(0)
+    })
+
+    test('Modal send failure', async () => {
+      function failure () {
+        const res = {
+          ok: false,
+          error: 'Sample error'
+        }
+        return res
+      }
+
+      const app = new App({})
+      app.client.views.open.mockImplementation(failure)
+      const res = await slack.sendEODModal(app, '12345')
+
+      expect(res).toEqual(-1)
+    })
+  })
+
+  describe('updateEODModal tests', () => {
+    const defBody = {
+      view: {
+        id: '12345',
+        blocks: ['block1', 'block2', 'block3']
+      }
+    }
+    const notDefBody = {
+      view: {
+        id: '12345',
+        blocks: ['block1', 'block2', 'block3', 'block4']
+      }
+    }
+    const app = new App({})
+
+    test('Update with blockers from default', () => {
+      const res = slack.updateEODModal(app, defBody, 'blockers')
+      expect(res).toEqual(3)
+    })
+
+    test('Update with notes from default', () => {
+      const res = slack.updateEODModal(app, defBody, 'notes')
+      expect(res).toEqual(5)
+    })
+
+    test('Update with blockers from notes', () => {
+      const res = slack.updateEODModal(app, notDefBody, 'blockers')
+      expect(res).toEqual(7)
+    })
+
+    test('Update with notes from blockers', () => {
+      const res = slack.updateEODModal(app, notDefBody, 'notes')
+      expect(res).toEqual(7)
+    })
+
+    test('Invalid add block arg', () => {
+      const res = slack.updateEODModal(app, {}, '')
+      expect(res).toEqual(-1)
+    })
+  })
 })
