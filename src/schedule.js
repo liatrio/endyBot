@@ -1,6 +1,5 @@
 const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
-// const database = require('./db.js')
 const slack = require('./slack')
 
 // All code for the node-cron scheduler goes here

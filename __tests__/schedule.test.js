@@ -42,8 +42,6 @@ describe('schedule.js testing suite', () => {
   })
 
   test('Skip adding a nonexistent group to schedule', async () => {
-    // let group = null
-
     mockingoose(Group).toReturn(null, 'findOne')
 
     const result = await schedule.scheduleCronJob('GID123', app)
