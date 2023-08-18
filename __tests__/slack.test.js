@@ -98,13 +98,34 @@ describe('slack.js testing suite', () => {
       }
 
       mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234' })
-      const res = await slack.createPost(mockGroup)
+      const res = await slack.createPost(mockApp, mockGroup)
       expect(res).toBe('1234')
-      expect(mockApp.client.chat.postMessage({
-        channel: 'C1234567890',
-        text: 'Test Group is a test message :thread:'
-      })
-      )
+    })
+
+    test('handle error', async () => {
+      const mockGroup = {}
+
+      const res = await slack.createPost(mockApp, mockGroup)
+      expect(res).toBe(null)
+    })
+  })
+
+  describe('dmUsers  tests', () => {
+    let mockApp
+
+    beforeEach(() => {
+      mockApp = new App({})
+    })
+
+    test('Successfully sent conributor a DM', async () => {
+      const users = ['UID123', 'UID456', 'UID789']
+      const result = await slack.dmUsers(mockApp, users)
+      expect(result).toBe(0)
+    })
+
+    test('No contributors in group error', async () => {
+      const result = await slack.dmUsers(mockApp, [])
+      expect(result).toBe(-1)
     })
   })
 })
