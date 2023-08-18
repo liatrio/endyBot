@@ -10,6 +10,9 @@ module.exports = {
     client: {
       views: {
         open: jest.fn(() => Promise.resolve())
+      },
+      chat: {
+        postMessage: jest.fn(() => Promise.resolve())
       }
     }
   }))
