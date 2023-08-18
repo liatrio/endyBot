@@ -150,7 +150,7 @@ describe('slack.js testing suite', () => {
       expect(res).toEqual(0)
     })
 
-    test('Modal send successfully', async () => {
+    test('Modal send failure', async () => {
       function failure () {
         const res = {
           ok: false,
