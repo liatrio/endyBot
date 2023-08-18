@@ -76,4 +76,11 @@ app.action('add_blockers', async ({ ack, body }) => {
   slack.updateEODModal(app, body, 'blockers')
 })
 
+// lisen for 'write eod' button from dm
+app.action('write_eod', async ({ ack, body }) => {
+  await ack()
+
+  slack.sendEODModal(app, body.trigger_id)
+})
+
 module.exports = { app }

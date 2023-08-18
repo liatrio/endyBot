@@ -118,13 +118,18 @@ describe('slack.js testing suite', () => {
     })
 
     test('Successfully sent conributor a DM', async () => {
-      const users = ['UID123', 'UID456', 'UID789']
-      const result = await slack.dmUsers(mockApp, users)
+      const group = {
+        contributors: ['UID123', 'UID456']
+      }
+      const result = await slack.dmUsers(mockApp, group)
       expect(result).toBe(0)
     })
 
     test('No contributors in group error', async () => {
-      const result = await slack.dmUsers(mockApp, [])
+      const group = {
+        contributors: []
+      }
+      const result = await slack.dmUsers(mockApp, group)
       expect(result).toBe(-1)
     })
   })

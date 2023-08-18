@@ -1,5 +1,6 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+
 async function createPost (app, group) {
   console.log(group)
   try {
@@ -17,13 +18,38 @@ async function createPost (app, group) {
   }
 }
 
-async function dmUsers (app, users) {
-  if (users.length != 0) {
-    for (const user of users) {
+async function dmUsers (app, group) {
+  if (group.contributors.length != 0) {
+    for (const user of group.contributors) {
       try {
         app.client.chat.postMessage({
           channel: user,
-          text: 'this is a test !'
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `It's time to write your EOD posts for *${group.name}!*`
+              }
+            },
+            {
+              type: 'divider'
+            },
+            {
+              type: 'actions',
+              elements: [
+                {
+                  type: 'button',
+                  text: {
+                    type: 'plain_text',
+                    text: 'Begin EOD Post',
+                    emoji: true
+                  },
+                  action_id: 'write_eod'
+                }
+              ]
+            }
+          ]
         })
         console.log('message sent')
       } catch (error) {
