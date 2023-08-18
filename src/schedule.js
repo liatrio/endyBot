@@ -7,7 +7,6 @@ const slack = require('./slack')
 async function scheduleCronJob (groupID, app) {
   // Find the correct group from the provided group ID
   const group = await Group.findOne({ _id: groupID })
-  console.log(group)
   if (group == null) {
     console.log(`Error: no group found with ID ${groupID}`)
     return null
