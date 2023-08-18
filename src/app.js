@@ -43,6 +43,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
   }
 })
 
+// listen for response from create-group-view modal
 app.view('create-group-view', async ({ view, ack }) => {
   await ack()
 
@@ -52,6 +53,34 @@ app.view('create-group-view', async ({ view, ack }) => {
   // Send new group info to db
   const groupID = await database.addToDB(newGroup)
   console.log(groupID)
+})
+
+// listen for response from EOD-response modal
+app.view('EOD-response', async ({ view, ack }) => {
+  await ack()
+
+  // handle response from EOD modal here
+})
+
+// listen for 'additional notes' button from EOD-reponse modal
+app.action('add_notes', async ({ ack, body }) => {
+  await ack()
+
+  slack.updateEODModal(app, body, 'notes')
+})
+
+// lisen for 'add blockers' button from EOD-response modal
+app.action('add_blockers', async ({ ack, body }) => {
+  await ack()
+
+  slack.updateEODModal(app, body, 'blockers')
+})
+
+// lisen for 'write eod' button from dm
+app.action('write_eod', async ({ ack, body }) => {
+  await ack()
+
+  slack.sendEODModal(app, body.trigger_id)
 })
 
 module.exports = { app }
