@@ -56,7 +56,7 @@ app.view('create-group-view', async ({ view, ack }) => {
   console.log(groupID)
 
   // Restart the cron scheduler to account for the new group
-  schedule.scheduleCronJob(groupID)
+  schedule.scheduleCronJob(groupID, app)
 })
 
 // listen for response from EOD-response modal

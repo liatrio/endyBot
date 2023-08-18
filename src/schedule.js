@@ -1,13 +1,14 @@
 const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
 // const database = require('./db.js')
-// const slack = require('./slack')
+const slack = require('./slack')
 
 // All code for the node-cron scheduler goes here
 
-async function scheduleCronJob (groupID) {
+async function scheduleCronJob (groupID, app) {
   // Find the correct group from the provided group ID
-  const group = await Group.find({ _id: groupID })
+  const group = await Group.findOne({ _id: groupID })
+  console.log(group)
   if (group == null) {
     console.log(`Error: no group found with ID ${groupID}`)
     return null
@@ -21,19 +22,21 @@ async function scheduleCronJob (groupID) {
     return null
   }
 
-  const item = {
-    // Keeping title in for now in case we can find a way to store/use it later. Right now it does nothing
-    eventTitle: `${group.name} Thread`,
-    cronString: cronTime,
-    callback: async () => {
-      // function to create thread
-      // function to DM users the form
-    }
-  }
-
   // Schedule the cron job
-  cron.schedule(item.cronString, item.callback)
+  const task = cron.schedule(cronTime, async () => {
+    // Create the initial thread
+    // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
+    slack.createPost(app, group)
+
+    // Send the contributors their EOD prompt
+    slack.dmUsers(app, group)
+  }, {
+    timezone: 'America/Los_Angeles'
+  })
+  console.log(task)
+
   console.log(`Group '${group.name}' added to scheduler`)
+
   return 0
 }
 

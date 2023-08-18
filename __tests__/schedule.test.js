@@ -15,7 +15,7 @@ describe('schedule.js testing suite', () => {
       channel: 'CID123'
     }
 
-    mockingoose(Group).toReturn(group, 'find')
+    mockingoose(Group).toReturn(group, 'findOne')
 
     const result = await schedule.scheduleCronJob('GID123')
 
@@ -31,7 +31,7 @@ describe('schedule.js testing suite', () => {
       channel: 'CID123'
     }
 
-    mockingoose(Group).toReturn(group, 'find')
+    mockingoose(Group).toReturn(group, 'findOne')
 
     const result = await schedule.scheduleCronJob('GID123')
 
@@ -41,7 +41,7 @@ describe('schedule.js testing suite', () => {
   test('Skip adding a nonexistent group to schedule', async () => {
     // let group = null
 
-    mockingoose(Group).toReturn(null, 'find')
+    mockingoose(Group).toReturn(null, 'findOne')
 
     const result = await schedule.scheduleCronJob('GID123')
 
