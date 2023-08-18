@@ -1,6 +1,7 @@
 const { App } = require('@slack/bolt')
 const slack = require('./slack')
-const database = require('./db.js')
+const database = require('./db')
+const schedule = require('./schedule')
 require('dotenv').config()
 
 // setting up app
@@ -53,6 +54,9 @@ app.view('create-group-view', async ({ view, ack }) => {
   // Send new group info to db
   const groupID = await database.addToDB(newGroup)
   console.log(groupID)
+
+  // Restart the cron scheduler to account for the new group
+  schedule.scheduleCronJob(groupID, app)
 })
 
 // listen for response from EOD-response modal
