@@ -4,8 +4,11 @@
 const mockingoose = require('mockingoose')
 const Group = require('../db-schemas/group')
 const schedule = require('../src/schedule')
+const { App } = require('@slack/bolt')
 
 describe('schedule.js testing suite', () => {
+  const app = new App({})
+
   test('Schedule cron job from valid group', async () => {
     const group = {
       name: 'Group 1',
@@ -17,7 +20,7 @@ describe('schedule.js testing suite', () => {
 
     mockingoose(Group).toReturn(group, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123')
+    const result = await schedule.scheduleCronJob('GID123', app)
 
     expect(result).toBe(0)
   })
@@ -33,7 +36,7 @@ describe('schedule.js testing suite', () => {
 
     mockingoose(Group).toReturn(group, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123')
+    const result = await schedule.scheduleCronJob('GID123', app)
 
     expect(result).toBeNull()
   })
@@ -43,7 +46,7 @@ describe('schedule.js testing suite', () => {
 
     mockingoose(Group).toReturn(null, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123')
+    const result = await schedule.scheduleCronJob('GID123', app)
 
     expect(result).toBeNull()
   })
