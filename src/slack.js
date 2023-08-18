@@ -1,5 +1,42 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+async function createPost (app, group) {
+  console.log(group)
+  try {
+    const cID = group.channel
+    const groupname = group.name
+    const threadId = await app.client.chat.postMessage({
+      channel: cID,
+      text: `${groupname} EOD :thread:`
+    })
+    console.log('thread created')
+    return threadId.ts
+  } catch (error) {
+    console.error('something happened while making the thread: ', error)
+    return null
+  }
+}
+
+async function dmUsers (app, users) {
+  if (users.length != 0) {
+    for (const user of users) {
+      try {
+        app.client.chat.postMessage({
+          channel: user,
+          text: 'this is a test !'
+        })
+        console.log('message sent')
+      } catch (error) {
+        console.error('something happened while sending dm: ', error)
+        continue
+      }
+    }
+  } else {
+    console.log('Error: no contributors in group')
+    return -1
+  }
+  return 0
+}
 
 async function sendCreateModal (app, triggerId) {
   const res = await app.client.views.open({
@@ -89,4 +126,4 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal }
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }

@@ -11,6 +11,9 @@ module.exports = {
       views: {
         open: jest.fn(() => Promise.resolve()),
         update: jest.fn(() => Promise.resolve())
+      },
+      chat: {
+        postMessage: jest.fn(() => Promise.resolve())
       }
     }
   }))

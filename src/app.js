@@ -28,13 +28,15 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       slack.sendCreateModal(app, command.trigger_id)
       break
     }
-
     case 'list': {
       const data = await database.listGroups()
       respond(`${data}`)
       break
     }
-
+    case 'help': {
+      respond('hello there! theres not much to see here yet')
+      break
+    }
     default:
       respond(`Command ${command.text} not found`)
       break
