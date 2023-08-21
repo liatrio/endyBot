@@ -64,23 +64,9 @@ async function dmUsers (app, group) {
   return 0
 }
 
-async function getURL (app, group, threadID) {
-  const link = await app.client.chat.getPermalink({
-    channel: group.channel,
-    message_ts: threadID
-  })
-  if (link) {
-    console.log('it worked')
-    return link
-  } else {
-    console.log('something went wrong retrieving the link')
-    return null
-  }
-}
-
 async function dmSubs (app, group, threadID) {
   if (group.subscribers.length != 0) {
-    const link = getURL(app, group, threadID)
+    const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
     for (const sub of group.subscribers) {
       try {
         app.client.chat.postMessage({
@@ -89,12 +75,15 @@ async function dmSubs (app, group, threadID) {
           ${link}`
         })
         console.log('message sent')
+        return 0
       } catch (error) {
         console.error('something went wrong trying to send the message: ', error)
+        continue
       }
     }
   } else {
     console.log("there aren't any subscribers")
+    return -1
   }
 }
 

@@ -125,11 +125,27 @@ describe('slack.js testing suite', () => {
       expect(result).toBe(0)
     })
 
+    test('Successfully sent subscriber a dm ', async () => {
+      const group = {
+        subscribers: ['UID123', 'UID456']
+      }
+      const result = await slack.dmSubs(mockApp, group)
+      expect(result).toBe(0)
+    })
+
     test('No contributors in group error', async () => {
       const group = {
         contributors: []
       }
       const result = await slack.dmUsers(mockApp, group)
+      expect(result).toBe(-1)
+    })
+
+    test('No subscribers in group error', async () => {
+      const group = {
+        subscribers: []
+      }
+      const result = await slack.dmSubs(mockApp, group)
       expect(result).toBe(-1)
     })
   })
