@@ -64,6 +64,40 @@ async function dmUsers (app, group) {
   return 0
 }
 
+async function getURL (app, group, threadID) {
+  const link = await app.client.chat.getPermalink({
+    channel: group.channel,
+    message_ts: threadID
+  })
+  if (link) {
+    console.log('it worked')
+    return link
+  } else {
+    console.log('something went wrong retrieving the link')
+    return null
+  }
+}
+
+async function dmSubs (app, group, threadID) {
+  if (group.subscribers.length != 0) {
+    const link = getURL(app, group, threadID)
+    for (const sub of group.subscribers) {
+      try {
+        app.client.chat.postMessage({
+          channel: sub,
+          text: `test message for sending to subscribers \n \
+          ${link}`
+        })
+        console.log('message sent')
+      } catch (error) {
+        console.error('something went wrong trying to send the message: ', error)
+      }
+    }
+  } else {
+    console.log("there aren't any subscribers")
+  }
+}
+
 async function sendCreateModal (app, triggerId) {
   const res = await app.client.views.open({
     trigger_id: triggerId,
@@ -158,4 +192,4 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, dmSubs }
