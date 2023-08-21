@@ -96,10 +96,12 @@ function parseCreateModal (view) {
   }
 }
 
-async function sendEODModal (app, triggerId) {
+async function sendEODModal (app, triggerId, groupName) {
+  const modal = views.eodDefault
+  modal.private_metadata = groupName
   const res = await app.client.views.open({
     trigger_id: triggerId,
-    view: views.eodDefault
+    view: modal
   })
 
   if (res.ok != true) {
@@ -143,9 +145,13 @@ function updateEODModal (app, body, toAdd) {
     }
   }
 
+  // add metadata to target modal
+  const modal = viewMap[targetView]
+  modal.private_metadata = body.view.private_metadata
+
   // update view
   app.client.views.update({
-    view: viewMap[targetView],
+    view: modal,
     view_id: body.view.id
   })
 
