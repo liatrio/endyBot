@@ -21,11 +21,14 @@ describe('group.js testing suite', () => {
       contributors: ['UID12345'],
       subscribers: ['UID56789'],
       postTime: 0,
-      channel: '#test-channel'
+      channel: '#test-channel',
+      ts: '123456.78',
+      cronTask: { attribute: 1 }
     }
 
     mockingoose(Group).toReturn(_group, 'findOne')
     return Group.findById({ _id: '64dbee9baf23d8dc32bcbad3' }).then(group => {
+      console.log(group)
       expect(JSON.parse(JSON.stringify(group))).toMatchObject(_group)
     })
   })
@@ -37,21 +40,27 @@ describe('group.js testing suite', () => {
         contributors: ['UID123', 'UID456'],
         subscribers: ['UIS789'],
         postTime: 0,
-        channel: '#ex-channel'
+        channel: '#ex-channel',
+        ts: '1234455.12',
+        cronTask: { attribute: 1 }
       },
       {
         name: 'Group 2',
         contributors: ['UID123'],
         subscribers: ['UIS789'],
         postTime: 0,
-        channel: '#ex-channel'
+        channel: '#ex-channel',
+        ts: '1234456.12',
+        cronTask: { attribute: 1 }
       },
       {
         name: 'Group 3',
         contributors: ['UID123', 'UID456', 'UID789'],
         subscribers: ['UIS789'],
         postTime: 0,
-        channel: '#ex-channel'
+        channel: '#ex-channel',
+        ts: '1234457.12',
+        cronTask: { attribute: 1 }
       }
     ]
 
@@ -95,7 +104,9 @@ describe('addToDB function', () => {
       contributors: ['keoni', 'mikayla', 'carson'],
       subscribers: ['josh'],
       postTime: 5,
-      channel: 'fake-channel'
+      channel: 'fake-channel',
+      ts: '123456.78',
+      cronTask: { attribute: 1 }
     }
     let id
     // Mock the create operation to return a mock group with the provided ID

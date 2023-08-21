@@ -7,14 +7,19 @@ const Schema = mongoose.Schema
  * name (String) - Name of the group
  * contributors (String) - List of SlackIDs of contributors
  * subscribers (String) - List of SlackIDs of subscribers
- *
+ * postTime (Number) - The number of the hour at which posts should be sent (ex. 4 PM would be 16, 11 AM would be 11)
+ * channel (String) - The ID of the channel in which thread posts should be sent to
+ * ts (String) - The timestamp/ID of the main thread posts for the day (Should be updated every day when a new thread is created) (Slack expects this as a string)
+ * cronTask (Object) - The cron task that handles posting the thread and sending the EOD form to users
  */
 const groupSchema = Schema({
   name: String,
   contributors: [String],
   subscribers: [String],
   postTime: Number,
-  channel: String
+  channel: String,
+  ts: String,
+  cronTask: Object
 })
 
 const Group = mongoose.model('Group', groupSchema)
