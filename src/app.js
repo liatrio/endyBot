@@ -2,6 +2,7 @@ const { App } = require('@slack/bolt')
 const slack = require('./slack')
 const database = require('./db')
 const schedule = require('./schedule')
+const helpers = require('./helpers')
 require('dotenv').config()
 
 // setting up app
@@ -84,7 +85,11 @@ app.action('add_blockers', async ({ ack, body }) => {
 app.action('write_eod', async ({ ack, body }) => {
   await ack()
 
-  slack.sendEODModal(app, body.trigger_id)
+  // parse the group name from the message
+  const groupName = helpers.groupNameFromMessage(body.message.text)
+
+  // open the EOD modal
+  slack.sendEODModal(app, body.trigger_id, groupName)
 })
 
 module.exports = { app }
