@@ -4,14 +4,13 @@
 const mockingoose = require('mockingoose')
 const Group = require('../db-schemas/group')
 const Post = require('../db-schemas/post')
-const { addToDB } = require('../src/db')
+const db = require('../src/db')
 
 // i added this to ensure that our tests dont interfere with eachother
 // it resets the DB after each test
 afterEach(() => {
   mockingoose.resetAll()
 })
-const { listGroups } = require('../src/db')
 
 describe('group.js testing suite', () => {
   test('Create a group', () => {
@@ -66,7 +65,7 @@ describe('group.js testing suite', () => {
 
     mockingoose(Group).toReturn(groups, 'find')
 
-    const result = await listGroups()
+    const result = await db.listGroups()
 
     expect(result).toBe('Group 1 --- Num Members: 2\nGroup 2 --- Num Members: 1\nGroup 3 --- Num Members: 3\n')
   })
@@ -74,7 +73,7 @@ describe('group.js testing suite', () => {
   test('No groups returned from DB', async () => {
     const groups = []
     mockingoose(Group).toReturn(groups, 'find')
-    const result = await listGroups()
+    const result = await db.listGroups()
     expect(result).toBe('No groups to be listed')
   })
 })
@@ -112,7 +111,51 @@ describe('addToDB function', () => {
     // Mock the create operation to return a mock group with the provided ID
     mockingoose(Group).toReturn({ _id: id }, 'create')
 
-    const result = await addToDB(fakeGroup)
+    const result = await db.addToDB(fakeGroup)
     expect(result).not.toBeNull()
+  })
+})
+
+describe('getGroup function', () => {
+  test('No arguments supplied', async () => {
+    const res = await db.getGroup()
+    expect(res).toEqual(-1)
+  })
+
+  test('Group Name supplied, found', async () => {
+    const group = {
+      _id: '64e3e720f3e3e106543a0fbf',
+      name: 'Test Group'
+    }
+
+    mockingoose(Group).toReturn(group, 'findOne')
+
+    const res = await db.getGroup('Test Group')
+    expect(JSON.stringify(res._id)).toBe(JSON.stringify(group._id))
+  })
+
+  test('Group ID supplied, found', async () => {
+    const group = {
+      _id: '64e3e720f3e3e106543a0fbf',
+      name: 'Test Group'
+    }
+
+    mockingoose(Group).toReturn(group, 'findOne')
+
+    const res = await db.getGroup(undefined, '64e3e720f3e3e106543a0fbf')
+    expect(JSON.stringify(res.name)).toBe(JSON.stringify(group.name))
+  })
+
+  test('Group name and Group ID supplied, found', async () => {
+    const _group = {
+      _id: '64e3e720f3e3e106543a0fbf',
+      name: 'Test Group',
+      contributors: ['UID1234']
+    }
+
+    mockingoose(Group).toReturn(_group, 'findOne')
+
+    const res = await db.getGroup('Test Group', '64e3e720f3e3e106543a0fbf')
+    expect(res.contributors).toEqual(_group.contributors)
   })
 })
