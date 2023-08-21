@@ -71,8 +71,26 @@ async function dmSubs (app, group, threadID) {
       try {
         app.client.chat.postMessage({
           channel: sub,
-          text: `test message for sending to subscribers \n \
-          ${link}`
+          // text: `test message for sending to subscribers \n \
+          // ${link}`
+          blocks: [
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `Hey there ${group.sub}, here's *${group.name}!* EOD thread`
+              }
+            },
+            {
+              type: 'divider'
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `${link}`
+              }
+            }]
         })
         console.log('message sent')
         return 0
