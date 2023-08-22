@@ -82,8 +82,9 @@ async function validateInput (group, threadID) {
 
 async function dmSubs (app, group, threadID) {
   const check = validateInput(group, threadID)
+  const cleanTS = threadID.replace('.', '')
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
-  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
+  const link = `https://liatrio.slack.com/archives/${group.channel}/p${cleanTS}`
 
   for (const sub of group.subscribers) {
     try {
