@@ -6,12 +6,13 @@ async function createPost (app, group) {
   try {
     const cID = group.channel
     const groupname = group.name
-    const threadId = await app.client.chat.postMessage({
+    const res = await app.client.chat.postMessage({
       channel: cID,
       text: `${groupname} EOD :thread:`
     })
-    console.log('thread created')
-    return threadId.thread_ts
+
+    console.log('message response: \n', res, 'reponse time stampe is : \n', res.ts)
+    return res.ts
   } catch (error) {
     console.error('something happened while making the thread: ', error)
     return null
@@ -19,7 +20,7 @@ async function createPost (app, group) {
 }
 
 async function dmUsers (app, group) {
-  if (group.contributors.length == 0) {
+  if (!group.contributors.length) {
     console.log('no contributors in the group!')
     return -1
   }
@@ -63,26 +64,27 @@ async function dmUsers (app, group) {
   return 0
 }
 
-async function validateAndCreateLink (group, threadid) {
-  if (group.subscribers.length == 0) {
-    console.error('group length is 0')
-    return -1
+async function validateInput (group, threadID) {
+  if (!group.subscribers.length) {
+    console.log('group length is 0')
+    return 1
   }
   if (!group.channel) {
-    console.error('group channel is a null object')
-    return -1
+    console.log('group channel is a null object')
+    return 2
   }
-  if (!threadid) {
-    console.error('thread id is null')
-    return -1
+  if (!threadID) {
+    console.log('thread id is null')
+    return 3
   }
-  // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
-  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadid}`
-  return link
+  return 0
 }
 
 async function dmSubs (app, group, threadID) {
-  const link = validateAndCreateLink(group, threadID)
+  const check = validateInput(group, threadID)
+  // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
+  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
+
   for (const sub of group.subscribers) {
     try {
       app.client.chat.postMessage({
@@ -92,7 +94,7 @@ async function dmSubs (app, group, threadID) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `Hey there ${group.sub}, here's ${group.name}'s EOD thread`
+              text: `Hey there, here's ${group.name}'s EOD thread`
             }
           },
           {
@@ -102,17 +104,17 @@ async function dmSubs (app, group, threadID) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `${link}`
+              text: `*${link}*`
             }
           }]
       })
       console.log('message sent')
-      return 0
     } catch (error) {
       console.error('something went wrong trying to send the message: ', error)
       continue
     }
   }
+  return check
 }
 
 async function sendCreateModal (app, triggerId) {
