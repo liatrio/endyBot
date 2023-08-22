@@ -12,7 +12,8 @@ async function createPost (app, group) {
     })
 
     console.log('message response: \n', res, 'reponse time stampe is : \n', res.ts)
-    return res.ts
+    const cleanRes = res.ts.replace('.', '')
+    return cleanRes
   } catch (error) {
     console.error('something happened while making the thread: ', error)
     return null
@@ -82,9 +83,8 @@ async function validateInput (group, threadID) {
 
 async function dmSubs (app, group, threadID) {
   const check = validateInput(group, threadID)
-  const cleanTS = threadID.replace('.', '')
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
-  const link = `https://liatrio.slack.com/archives/${group.channel}/p${cleanTS}`
+  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
 
   for (const sub of group.subscribers) {
     try {
