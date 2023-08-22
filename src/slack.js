@@ -1,5 +1,6 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+require('dotenv').config()
 
 async function createPost (app, group) {
   console.log(group)
@@ -84,7 +85,7 @@ async function validateInput (group, threadID) {
 async function dmSubs (app, group, threadID) {
   const check = validateInput(group, threadID)
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
-  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
+  const link = `${process.env.ORG}${group.channel}/p${threadID}`
 
   for (const sub of group.subscribers) {
     try {
