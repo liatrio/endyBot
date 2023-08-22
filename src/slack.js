@@ -12,11 +12,10 @@ async function createPost (app, group) {
       text: `${groupname} EOD :thread:`
     })
 
-    console.log('message response: \n', res, 'reponse time stampe is : \n', res.ts)
     const cleanRes = res.ts.replace('.', '')
     return cleanRes
   } catch (error) {
-    console.error('something happened while making the thread: ', error)
+    console.error(`something happened while making the thread\n group: ${group.name}\n channel: ${group.channel}\n error: `, error)
     return null
   }
 }
@@ -110,9 +109,12 @@ async function dmSubs (app, group, threadID) {
             }
           }]
       })
-      console.log('message sent')
     } catch (error) {
-      console.error('something went wrong trying to send the message: ', error)
+      console.log('')
+      console.error(`something went wrong trying to send the message: \n \
+      sub: ${group.sub}\n \
+      group: ${group.name}\n \
+      error: `, error)
       continue
     }
   }
