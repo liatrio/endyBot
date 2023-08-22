@@ -11,7 +11,7 @@ async function createPost (app, group) {
       text: `${groupname} EOD :thread:`
     })
     console.log('thread created')
-    return threadId.ts
+    return threadId.thread_ts
   } catch (error) {
     console.error('something happened while making the thread: ', error)
     return null
@@ -19,89 +19,99 @@ async function createPost (app, group) {
 }
 
 async function dmUsers (app, group) {
-  if (group.contributors.length != 0) {
-    for (const user of group.contributors) {
-      try {
-        app.client.chat.postMessage({
-          channel: user,
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `It's time to write your EOD posts for *${group.name}!*`
-              }
-            },
-            {
-              type: 'divider'
-            },
-            {
-              type: 'actions',
-              elements: [
-                {
-                  type: 'button',
-                  text: {
-                    type: 'plain_text',
-                    text: 'Begin EOD Post',
-                    emoji: true
-                  },
-                  action_id: 'write_eod'
-                }
-              ]
-            }
-          ]
-        })
-        console.log('message sent')
-      } catch (error) {
-        console.error('something happened while sending dm: ', error)
-        continue
-      }
-    }
-  } else {
-    console.log('Error: no contributors in group')
+  if (group.contributors.length == 0) {
+    console.log('no contributors in the group!')
     return -1
+  }
+  for (const user of group.contributors) {
+    try {
+      app.client.chat.postMessage({
+        channel: user,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `It's time to write your EOD posts for *${group.name}!*`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'Begin EOD Post',
+                  emoji: true
+                },
+                action_id: 'write_eod'
+              }
+            ]
+          }
+        ]
+      })
+      console.log('message sent')
+    } catch (error) {
+      console.error('something happened while sending dm: ', error)
+      continue
+    }
   }
   return 0
 }
 
-async function dmSubs (app, group, threadID) {
-  if (group.subscribers.length != 0) {
-    const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadID}`
-    for (const sub of group.subscribers) {
-      try {
-        app.client.chat.postMessage({
-          channel: sub,
-          // text: `test message for sending to subscribers \n \
-          // ${link}`
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `Hey there ${group.sub}, here's *${group.name}!* EOD thread`
-              }
-            },
-            {
-              type: 'divider'
-            },
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `${link}`
-              }
-            }]
-        })
-        console.log('message sent')
-        return 0
-      } catch (error) {
-        console.error('something went wrong trying to send the message: ', error)
-        continue
-      }
-    }
-  } else {
-    console.log("there aren't any subscribers")
+async function validateAndCreateLink (group, threadid) {
+  if (group.subscribers.length == 0) {
+    console.error('group length is 0')
     return -1
+  }
+  if (!group.channel) {
+    console.error('group channel is a null object')
+    return -1
+  }
+  if (!threadid) {
+    console.error('thread id is null')
+    return -1
+  }
+  // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
+  const link = `https://liatrio.slack.com/archives/${group.channel}/p${threadid}`
+  return link
+}
+
+async function dmSubs (app, group, threadID) {
+  const link = validateAndCreateLink(group, threadID)
+  for (const sub of group.subscribers) {
+    try {
+      app.client.chat.postMessage({
+        channel: sub,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `Hey there ${group.sub}, here's ${group.name}'s EOD thread`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `${link}`
+            }
+          }]
+      })
+      console.log('message sent')
+      return 0
+    } catch (error) {
+      console.error('something went wrong trying to send the message: ', error)
+      continue
+    }
   }
 }
 
