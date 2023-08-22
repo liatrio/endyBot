@@ -1,5 +1,7 @@
 const { mongoose } = require('mongoose')
 const Group = require('../db-schemas/group.js')
+const Tasks = require('../db-schemas/task.js')
+const util = require('util')
 
 // Put all functions interacting with the database here
 
@@ -22,6 +24,21 @@ async function addToDB (groupJson) {
     return null
   }
 }
+
+async function addTaskToDB (groupName, eodTask, subscriberTask) {
+  try {
+    const stringEod = util.inspect(eodTask)
+    const stringSubscriberTask = util.inspect(subscriberTask)
+    const entry = groupName + '_task'
+    const task = await Tasks.create({ group: entry, eod: stringEod, subscribers: stringSubscriberTask })
+    console.log(task)
+    return 0
+  } catch (err) {
+    console.error('error adding task group to database: ', err)
+    return null
+  }
+}
+
 // List all group names and how many members they have
 async function listGroups () {
   const groups = await Group.find({})
@@ -69,4 +86,4 @@ async function getGroup (groupName, groupID) {
   return resGroup
 }
 
-module.exports = { addToDB, listGroups, getGroup }
+module.exports = { addToDB, listGroups, getGroup, addTaskToDB }

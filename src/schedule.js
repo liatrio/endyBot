@@ -1,8 +1,19 @@
 const Group = require('../db-schemas/group.js')
+const Tasks = require('../db-schemas/task.js')
 const cron = require('node-cron')
 const slack = require('./slack')
+const db = require('./db.js')
 
 // All code for the node-cron scheduler goes here
+
+async function startCronJobs () {
+  const tasks = await Tasks.find({})
+  for (const task of tasks) {
+    const taskData = JSON.parse(task.eod)
+    // taskData.start()
+    console.log(taskData)
+  }
+}
 
 async function scheduleCronJob (groupID, app) {
   // Find the correct group from the provided group ID
@@ -20,8 +31,8 @@ async function scheduleCronJob (groupID, app) {
     return null
   }
 
-  // Schedule the cron job
-  const task = cron.schedule(cronTime, async () => {
+  // Schedule the eod cron job
+  const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
     // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
     slack.createPost(app, group)
@@ -31,7 +42,21 @@ async function scheduleCronJob (groupID, app) {
   }, {
     timezone: 'America/Los_Angeles'
   })
-  console.log(task)
+
+  // Schedule the subscriber cron job
+  const subscriberTask = cron.schedule('59 20 * * 1-5', async () => {
+    // Send DM to subscribers
+
+  }, {
+    timezone: 'America/Los_Angeles'
+  })
+
+  /*
+  Here we're adding the tasks to their own database
+  NOTE:
+    SubsriberTask is currently just a place holder to store a future task
+  */
+  db.addTaskToDB(group.name, eodTask, subscriberTask)
 
   console.log(`Group '${group.name}' added to scheduler`)
 
@@ -84,7 +109,7 @@ function convertPostTimeToCron (hour) {
   if (cronHour == null) {
     return null
   }
-  return `0 ${cronHour} * * 1-5`
+  return `46 ${cronHour} * * 1-5`
 }
 
-module.exports = { scheduleCronJob, convertPostTimeToCron }
+module.exports = { scheduleCronJob, convertPostTimeToCron, startCronJobs }

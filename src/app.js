@@ -21,6 +21,8 @@ if (process.env.DEV == 1) {
   slashcommand = '/endybot-dev'
 }
 
+schedule.startCronJobs()
+
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
@@ -55,6 +57,8 @@ app.view('create-group-view', async ({ view, ack }) => {
   // Send new group info to db
   const groupID = await database.addToDB(newGroup)
   console.log(groupID)
+  // Create task entry for group in tasks table
+  await database.addTaskToDB(groupID)
 
   // Restart the cron scheduler to account for the new group
   schedule.scheduleCronJob(groupID, app)
