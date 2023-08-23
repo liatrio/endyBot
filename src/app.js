@@ -21,6 +21,13 @@ if (process.env.DEV == 1) {
   slashcommand = '/endybot-dev'
 }
 
+// list of all cron tasks. This will be needed to stop tasks upon group deletion
+const allTasks = []
+
+// upon startup, setup a cron job for all groups in the database
+schedule.startCronJobs(allTasks, app)
+
+// listen for user commands
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
@@ -56,8 +63,9 @@ app.view('create-group-view', async ({ view, ack }) => {
   const groupID = await database.addToDB(newGroup)
   console.log(groupID)
 
-  // Restart the cron scheduler to account for the new group
-  schedule.scheduleCronJob(groupID, app)
+  // Add the new group to the cron scheduler
+  const group = await database.getGroup(undefined, groupID)
+  schedule.scheduleCronJob(allTasks, group, app)
 })
 
 // listen for response from EOD-response modal

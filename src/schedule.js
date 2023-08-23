@@ -1,14 +1,28 @@
 const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
 const slack = require('./slack')
+require('node-cron')
 
 // All code for the node-cron scheduler goes here
 
-async function scheduleCronJob (groupID, app) {
-  // Find the correct group from the provided group ID
-  const group = await Group.findOne({ _id: groupID })
+// called from app.js on app startup. sets up cron jobs for all groups in the database
+async function startCronJobs (allTasks, app) {
+  const groups = await Group.find({})
+  if (groups.length !== 0) {
+    for (const group of groups) {
+      console.log(group)
+      // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
+      await scheduleCronJob(allTasks, group, app)
+    }
+    return 0
+  }
+  console.log('No groups in database, not scheduling anything')
+  return null
+}
+
+// create a cron job for a group. this job will persist until the app is reloaded or it is stopped upon group deletion
+async function scheduleCronJob (allTasks, group, app) {
   if (group == null) {
-    console.log(`Error: no group found with ID ${groupID}`)
     return null
   }
 
@@ -20,8 +34,8 @@ async function scheduleCronJob (groupID, app) {
     return null
   }
 
-  // Schedule the cron job
-  const task = cron.schedule(cronTime, async () => {
+  // Schedule the eod cron job that will spawn the thread and dm the eod form to the contributors
+  const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
     // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
     slack.createPost(app, group)
@@ -31,10 +45,27 @@ async function scheduleCronJob (groupID, app) {
   }, {
     timezone: 'America/Los_Angeles'
   })
-  console.log(task)
+
+  // Schedule the cron job to dm the subscribers at the end of each day
+  const subscriberTask = cron.schedule('59 20 * * 1-5', async () => {
+    // Send DM to subscribers
+
+  }, {
+    timezone: 'America/Los_Angeles'
+  })
+
+  // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
+  const entry = {
+    group: group.name,
+    eodTask: eodTask,
+    subscriberTask: subscriberTask
+  }
+
+  // now we can find this entry later if the group needs to be deleted
+  allTasks.push(entry)
 
   console.log(`Group '${group.name}' added to scheduler`)
-
+  console.log(`# of groups in scheduler: ${allTasks.length}`)
   return 0
 }
 
@@ -87,4 +118,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { scheduleCronJob, convertPostTimeToCron }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron }

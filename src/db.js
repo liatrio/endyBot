@@ -22,6 +22,7 @@ async function addToDB (groupJson) {
     return null
   }
 }
+
 // List all group names and how many members they have
 async function listGroups () {
   const groups = await Group.find({})
