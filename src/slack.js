@@ -1,7 +1,13 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
-require('dotenv').config()
+require('dotenv').config() // stores our organization link for slack
 
+/**
+ * creates a post in a specified channel
+ * @param {*} app
+ * @param {*} group
+ * @returns returns the timestamp of the post on success and null on failure
+*/
 async function createPost (app, group) {
   console.log(group)
   try {
@@ -18,6 +24,12 @@ async function createPost (app, group) {
   }
 }
 
+/**
+ * sends a message to each contributor in our db for a respective group
+ * @param {*} app
+ * @param {*} group
+ * @returns 0 on success and -1 if there are no contributors
+ */
 async function dmUsers (app, group) {
   if (!group.contributors.length) {
     console.log('no contributors in the group!')
@@ -63,6 +75,12 @@ async function dmUsers (app, group) {
   return 0
 }
 
+/**
+ * checks that our input is not malformed or non existent
+ * @param {*} group
+ * @param {*} threadID
+ * @returns 0-3 0 being ok and 1-3 being different errors
+ */
 async function validateInput (group, threadID) {
   if (!group.subscribers.length) {
     console.log('group length is 0')
@@ -79,6 +97,13 @@ async function validateInput (group, threadID) {
   return 0
 }
 
+/**
+ * sends a message of EOD link to subscribers stored in our db
+ * @param {*} app
+ * @param {*} group
+ * @param {*} threadID
+ * @returns variable check which should be 0 on success and 1,2, or 3 depending on the error
+ */
 async function dmSubs (app, group, threadID) {
   const check = validateInput(group, threadID)
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
