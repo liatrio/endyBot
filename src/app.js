@@ -61,7 +61,6 @@ app.view('create-group-view', async ({ view, ack }) => {
 
   // Send new group info to db
   const groupID = await database.addToDB(newGroup)
-  console.log(groupID)
 
   // Add the new group to the cron scheduler
   const group = await database.getGroup(undefined, groupID)
@@ -69,10 +68,11 @@ app.view('create-group-view', async ({ view, ack }) => {
 })
 
 // listen for response from EOD-response modal
-app.view('EOD-response', async ({ view, ack }) => {
+app.view('EOD-response', async ({ body, ack }) => {
   await ack()
 
   // handle response from EOD modal here
+  slack.postEODResponse(app, body.view, body.user.id)
 })
 
 // listen for 'additional notes' button from EOD-reponse modal

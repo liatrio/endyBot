@@ -1,5 +1,7 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+const db = require('./db')
+const helpers = require('./helpers')
 
 async function createPost (app, group) {
   console.log(group)
@@ -158,4 +160,28 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }
+async function postEODResponse (app, view, uid) {
+  // get information about what thread to post the response in
+  const groupName = view.private_metadata
+
+  const group = await db.getGroup(groupName)
+
+  // get information about the user who's response is being posted
+  const userInfo = await app.client.users.info({ user: uid })
+
+  const userDisplayName = userInfo.user.profile.display_name
+
+  // construct the response block
+  const respBlock = helpers.formatEODResponse(view.state.values, userDisplayName)
+
+  console.log(group)
+
+  app.client.chat.postMessage({
+    channel: group.channel,
+    thread_ts: group.ts, // this is what makes this message a thread reply rather than a whole new message
+    block: respBlock,
+    text: 'EOD Response'
+  })
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse }
