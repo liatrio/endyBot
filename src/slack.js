@@ -12,8 +12,8 @@ async function createPost (app, group) {
       text: `${groupname} EOD :thread:`
     })
 
-    const cleanRes = res.ts.replace('.', '')
-    return cleanRes
+    // const cleanRes = res.ts.replace('.', '')
+    return res.ts
   } catch (error) {
     console.error(`something happened while making the thread\n group: ${group.name}\n channel: ${group.channel}\n error: `, error)
     return null

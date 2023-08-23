@@ -99,7 +99,7 @@ describe('slack.js testing suite', () => {
 
       mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234.5678' })
       const res = await slack.createPost(mockApp, mockGroup)
-      expect(res).toBe('12345678')
+      expect(res).toBe('1234.5678')
     })
 
     test('handle error', async () => {
