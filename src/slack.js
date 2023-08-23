@@ -158,4 +158,34 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }
+async function updateEodReminder (app, user, group, messageTS) {
+  try {
+    const convo = await app.client.conversations.history({
+      channel: user,
+      latest: messageTS,
+      inclusive: true,
+      count: 1
+    })
+
+    if (!convo.messages.length) {
+      console.log('empty message')
+      return 1
+    }
+
+    const message = convo.messages[0].blocks
+    const removed = message.filter(block => block.type !== 'actions')
+    const res = await app.client.chat.update({
+      channel: user,
+      timestamp: messageTS,
+      message: removed
+    })
+
+    if (res.ok) {
+      return 0
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, updateEodReminder }
