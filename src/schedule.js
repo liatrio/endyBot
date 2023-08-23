@@ -38,13 +38,10 @@ async function scheduleCronJob (allTasks, group, app) {
   const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
     // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
-    const threadId = await slack.createPost(app, group)
+    await slack.createPost(app, group)
 
     // Send the contributors their EOD prompt
     slack.dmUsers(app, group)
-
-    // send to the subscribers
-    slack.dmSubs(app, group, threadId)
   }, {
     timezone: 'America/Los_Angeles'
   })
@@ -60,8 +57,8 @@ async function scheduleCronJob (allTasks, group, app) {
   // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
   const entry = {
     group: group.name,
-    eodTask: eodTask,
-    subscriberTask: subscriberTask
+    eodTask,
+    subscriberTask
   }
 
   // now we can find this entry later if the group needs to be deleted
