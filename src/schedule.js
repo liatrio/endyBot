@@ -38,7 +38,7 @@ async function scheduleCronJob (allTasks, group, app) {
   const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
     // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
-    const threadId = slack.createPost(app, group)
+    const threadId = await slack.createPost(app, group)
 
     // Send the contributors their EOD prompt
     slack.dmUsers(app, group)
