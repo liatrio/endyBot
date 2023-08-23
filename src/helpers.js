@@ -23,13 +23,13 @@ function groupNameFromMessage (message) {
  * @param {*} view The view returned from the modal response
  * @returns A block object
  */
-function formatEODResponse (values, userDisplayName) {
+function formatEODResponse (values, uid) {
   const block = [
     {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*@${userDisplayName}'s EOD Response*`
+        text: `*<@${uid}>'s EOD Response*`
       }
     }
   ]
