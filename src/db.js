@@ -63,10 +63,7 @@ async function getGroup (groupName, groupID) {
     return -1
   }
 
-  console.log(searchParams)
-
   const resGroup = await Group.findOne(searchParams)
-  console.log(resGroup)
   return resGroup
 }
 
