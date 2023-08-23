@@ -70,4 +70,13 @@ async function getGroup (groupName, groupID) {
   return resGroup
 }
 
-module.exports = { addToDB, listGroups, getGroup }
+async function addSubscriber (groupname /*, userInfo */) {
+  const group = getGroup(groupname, undefined)
+  if (group === undefined) {
+    return `No group exists with name ${groupname}`
+  }
+  // group.subscribers.push(/*userInfo.id */)
+  group.save()
+}
+
+module.exports = { addToDB, listGroups, getGroup, addSubscriber }

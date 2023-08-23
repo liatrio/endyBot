@@ -32,9 +32,15 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
   switch (command.text) {
-    case 'create':{
+    case 'create': {
       // open group create modal
       slack.sendCreateModal(app, command.trigger_id)
+      break
+    }
+    case 'subscribe': {
+      const groupname = await slack.parseSubscribeCommand(command.text)
+      const res = await database.addSubscriber(groupname /*, userInfo */)
+      respond(res)
       break
     }
     case 'list': {
