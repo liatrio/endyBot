@@ -9,6 +9,55 @@ const { App } = require('@slack/bolt')
 describe('schedule.js testing suite', () => {
   const app = new App({})
 
+  test('Handle cron job setup from single group in DB', async () => {
+    const groups = [{
+      name: 'Group 1',
+      contributors: ['UID123', 'UID456'],
+      subscribers: ['UIS789'],
+      postTime: 16,
+      channel: 'CID123'
+    }]
+
+    mockingoose(Group).toReturn(groups, 'find')
+
+    const result = await schedule.startCronJobs([], app)
+
+    expect(result).toBe(0)
+  })
+
+  test('Handle cron job setup from multiple groups in DB', async () => {
+    const groups = [{
+      name: 'Group 1',
+      contributors: ['UID123', 'UID456'],
+      subscribers: ['UIS789'],
+      postTime: 16,
+      channel: 'CID123'
+    },
+    {
+      name: 'Group 2',
+      contributors: ['UID123', 'UID456'],
+      subscribers: ['UIS789'],
+      postTime: 16,
+      channel: 'CID123'
+    }]
+
+    mockingoose(Group).toReturn(groups, 'find')
+
+    const result = await schedule.startCronJobs([], app)
+
+    expect(result).toBe(0)
+  })
+
+  test('Handle cron job setup from zero groups in DB', async () => {
+    const groups = []
+
+    mockingoose(Group).toReturn(groups, 'find')
+
+    const result = await schedule.startCronJobs([], app)
+
+    expect(result).toBeNull()
+  })
+
   test('Schedule cron job from valid group', async () => {
     const group = {
       name: 'Group 1',
@@ -20,7 +69,7 @@ describe('schedule.js testing suite', () => {
 
     mockingoose(Group).toReturn(group, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123', app)
+    const result = await schedule.scheduleCronJob([], group, app)
 
     expect(result).toBe(0)
   })
@@ -36,7 +85,7 @@ describe('schedule.js testing suite', () => {
 
     mockingoose(Group).toReturn(group, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123', app)
+    const result = await schedule.scheduleCronJob([], group, app)
 
     expect(result).toBeNull()
   })
@@ -44,7 +93,7 @@ describe('schedule.js testing suite', () => {
   test('Skip adding a nonexistent group to schedule', async () => {
     mockingoose(Group).toReturn(null, 'findOne')
 
-    const result = await schedule.scheduleCronJob('GID123', app)
+    const result = await schedule.scheduleCronJob([], null, app)
 
     expect(result).toBeNull()
   })
