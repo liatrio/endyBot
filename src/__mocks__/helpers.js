@@ -1,5 +1,6 @@
 /* eslint-env jest */
 
 module.exports = {
-  groupNameFromMessage: jest.fn()
+  groupNameFromMessage: jest.fn(),
+  formatEODResponse: jest.fn()
 }
