@@ -163,25 +163,25 @@ function updateEODModal (app, body, toAdd) {
 async function postEODResponse (app, view, uid) {
   // get information about what thread to post the response in
   const groupName = view.private_metadata
-
   const group = await db.getGroup(groupName)
 
-  // get information about the user who's response is being posted
-  const userInfo = await app.client.users.info({ user: uid })
-
-  const userDisplayName = userInfo.user.profile.display_name
-
   // construct the response block
-  const respBlock = helpers.formatEODResponse(view.state.values, userDisplayName)
+  const respBlock = helpers.formatEODResponse(view.state.values, uid)
 
-  console.log(group)
-
-  app.client.chat.postMessage({
+  // send message to thread
+  const res = await app.client.chat.postMessage({
     channel: group.channel,
     thread_ts: group.ts, // this is what makes this message a thread reply rather than a whole new message
-    block: respBlock,
+    blocks: respBlock,
     text: 'EOD Response'
   })
+
+  if (res.ok != true) {
+    console.log(`Error posting EOD response: ${res.error}`)
+    return res.error
+  }
+
+  return res.message.blocks
 }
 
 module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse }
