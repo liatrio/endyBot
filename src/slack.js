@@ -158,12 +158,4 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-async function parseSubscribeCommand (command) {
-  if (command.length !== 2) {
-    console.log('Invalid Command. USAGE: /endybot subscribe <group name>')
-    return null
-  }
-  return command[1]
-}
-
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, parseSubscribeCommand }
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }
