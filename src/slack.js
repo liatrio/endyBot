@@ -130,7 +130,7 @@ async function dmSubs (app, group, threadID) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*${link}*`
+              text: `${link}`
             }
           }]
       })
