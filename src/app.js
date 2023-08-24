@@ -61,9 +61,10 @@ app.view('create-group-view', async ({ view, ack }) => {
 })
 
 // listen for response from EOD-response modal
-app.view('EOD-response', async ({ view, ack }) => {
+app.view('EOD-response', async ({ view, body, ack }) => {
   await ack()
-
+  // console.log(body)
+  slack.updateEodReminder(app, body)
   // handle response from EOD modal here
 })
 
@@ -85,6 +86,8 @@ app.action('add_blockers', async ({ ack, body }) => {
 app.action('write_eod', async ({ ack, body }) => {
   await ack()
 
+  console.log(body.message.ts)
+  console.log(body.container.message_ts)
   // parse the group name from the message
   const groupName = helpers.groupNameFromMessage(body.message.text)
 
