@@ -97,9 +97,9 @@ describe('slack.js testing suite', () => {
         name: 'test group'
       }
 
-      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234' })
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234.5678' })
       const res = await slack.createPost(mockApp, mockGroup)
-      expect(res).toBe('1234')
+      expect(res).toBe('1234.5678')
     })
 
     test('handle error', async () => {
@@ -131,6 +131,51 @@ describe('slack.js testing suite', () => {
       }
       const result = await slack.dmUsers(mockApp, group)
       expect(result).toBe(-1)
+    })
+  })
+
+  describe('dmSubs tests', () => {
+    let mockApp
+
+    beforeEach(() => {
+      mockApp = new App({})
+    })
+
+    test('Successfully sent subscriber a dm ', async () => {
+      const group = {
+        subscribers: ['UID123', 'UID456'],
+        channel: '45678'
+      }
+      const ts = '1234.5678'
+      const result = await slack.dmSubs(mockApp, group, ts)
+      expect(result).toBe(0)
+    })
+
+    test('No subscribers in group error', async () => {
+      const group = {
+        subscribers: []
+      }
+      const ts = '1234.5678'
+      const result = await slack.dmSubs(mockApp, group, ts)
+      expect(result).toBe(1)
+    })
+
+    test('no channel in the group object or undefined', async () => {
+      const group = {
+        subscribers: ['UID123', 'UID456']
+      }
+      const ts = '123456.65432'
+      const res = await slack.dmSubs(mockApp, group, ts)
+      expect(res).toBe(2)
+    })
+
+    test('no timestamp', async () => {
+      const group = {
+        subscribers: ['UID123', 'UID456'],
+        channel: '45678'
+      }
+      const result = await slack.dmSubs(mockApp, group)
+      expect(result).toBe(3)
     })
   })
 
