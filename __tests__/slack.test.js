@@ -2,6 +2,18 @@
 const slack = require('../src/slack')
 const { App } = require('@slack/bolt')
 
+// calling this require so I can access the mocked out
+// functions and modify them for individual tests
+const db = require('../src/db')
+
+// this will grab the  require above and replace it
+// with the file in the src/__mocks__  folder
+jest.mock('../src/db')
+
+// This will just override any calls to helpers with
+// the file in the src/__mocks__ folder
+jest.mock('../src/helpers')
+
 describe('slack.js testing suite', () => {
   describe('sendCreateModal tests', () => {
     test('Modal send successfully', async () => {
@@ -250,6 +262,54 @@ describe('slack.js testing suite', () => {
     test('Invalid add block arg', () => {
       const res = slack.updateEODModal(app, {}, '')
       expect(res).toEqual(-1)
+    })
+  })
+
+  describe('postEODResponse test', () => {
+    const mockApp = new App({})
+
+    // mocking view
+    const view = {
+      private_metadata: 'groupName',
+      state: {
+        values: 'Sample value'
+      }
+    }
+
+    // mocking called functions
+    db.getGroup.mockResolvedValue({
+      channel: '1234',
+      ts: '1234'
+    })
+
+    test('Message sent succeffully', async () => {
+      // mocking a successful api call
+      mockApp.client.chat.postMessage.mockResolvedValue({
+        ok: true,
+        message: { blocks: 'Sample value' }
+      })
+
+      // defining expected result and calling function
+      const expectedRes = 'Sample value'
+
+      const res = await slack.postEODResponse(mockApp, view, '1234')
+
+      expect(res).toEqual(expectedRes)
+    })
+
+    test('Message not sent successfully', async () => {
+      // mocking an unsuccessful api call
+      mockApp.client.chat.postMessage.mockResolvedValue({
+        ok: false,
+        error: Error('Error sending message')
+      })
+
+      // defining expected result and calling function
+      const expectedRes = Error('Error sending message')
+
+      const res = await slack.postEODResponse(mockApp, view, '1234')
+
+      expect(res).toEqual(expectedRes)
     })
   })
 })
