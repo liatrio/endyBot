@@ -23,6 +23,26 @@ async function addToDB (groupJson) {
   }
 }
 
+// Deletes the group
+async function deleteGroup (groupName) {
+  // getGroup's "findOne" returns null if no matches were found, i.e. invalid group name
+  if (await getGroup(groupName) == null) {
+    return `${groupName} is not a valid group`
+  }
+
+  // if a valid groupname was passed, remove it and return results
+  try {
+    const result = await Group.deleteOne({ name: groupName })
+    if (result.deletedCount > 0) {
+      return `${groupName} was removed successfully`
+    } else {
+      return `${groupName} was not found`
+    }
+  } catch (error) {
+    return `Error while deleting ${groupName}: ${error.message}`
+  }
+}
+
 // List all group names and how many members they have
 async function listGroups () {
   const groups = await Group.find({})
@@ -70,4 +90,4 @@ async function getGroup (groupName, groupID) {
   return resGroup
 }
 
-module.exports = { addToDB, listGroups, getGroup }
+module.exports = { addToDB, listGroups, getGroup, deleteGroup }

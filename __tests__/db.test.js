@@ -159,3 +159,35 @@ describe('getGroup function', () => {
     expect(res.contributors).toEqual(_group.contributors)
   })
 })
+
+describe('deleteGroup function', () => {
+  test('testing invalid group names', async () => {
+    mockingoose(Group).toReturn(null, 'findOne')
+    const res = await db.deleteGroup('Test Group')
+    expect(res).toEqual('Test Group is not a valid group')
+  })
+
+  test('error catching', async () => {
+    const testGroup = 'testGroup'
+    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
+    mockingoose(Group).toReturn(console.error('error'), 'deleteOne')
+    const res = await db.deleteGroup('error')
+    expect(res).toEqual("Error while deleting error: Cannot read properties of undefined (reading 'deletedCount')")
+  })
+
+  test('testing valid group names', async () => {
+    const testGroup = 'testGroup'
+    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
+    mockingoose(Group).toReturn({ deletedCount: 1 }, 'deleteOne')
+    const res = await db.deleteGroup('testGroup')
+    expect(res).toEqual('testGroup was removed successfully')
+  })
+
+  test('testing valid group names', async () => {
+    const testGroup = 'testGroup'
+    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
+    mockingoose(Group).toReturn({ deletedCount: 0 }, 'deleteOne')
+    const res = await db.deleteGroup('testGroup')
+    expect(res).toEqual('testGroup was not found')
+  })
+})

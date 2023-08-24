@@ -31,10 +31,24 @@ schedule.startCronJobs(allTasks, app)
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
-  switch (command.text) {
+  // TECHNICAL DEBT //
+  // Might want to flush this out to a full parse command similar to groupyBot but for now to access delete I need just the delete keyword
+  const parsed = command.text.split(' ')
+  const cmd = parsed[0]
+  const group = parsed[1]
+
+  switch (cmd) {
     case 'create':{
       // open group create modal
       slack.sendCreateModal(app, command.trigger_id)
+      break
+    }
+    case 'delete':{
+      // calls all necessary functions to delete a group
+      // const groupName = helpers.parseDeleteCommand(command.text)
+      schedule.removeTasks(allTasks, cmd)
+      const res = await database.deleteGroup(group)
+      respond(res)
       break
     }
     case 'list': {
