@@ -64,8 +64,8 @@ async function scheduleCronJob (allTasks, group, app) {
   // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
   const entry = {
     group: group.name,
-    eodTask: eodTask,
-    subscriberTask: subscriberTask
+    eodTask,
+    subscriberTask
   }
 
   // now we can find this entry later if the group needs to be deleted
