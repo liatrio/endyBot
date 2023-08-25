@@ -36,7 +36,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       break
     }
     case 'help': {
-      respond('hello there! theres not much to see here yet')
+      respond("EndyBot automates the process of creating and locating EOD threads for teams. 'Contributors' are prompted with neat forms to fill out at a specified time which will populate a thread in a specified channel. It also DMs 'Subscribers' with a link to the thread at the end of the day for easy reference.\n\nAll current working commands: \n\ncreate:\n------\nusage: /endyBot create\ndescription: Prompts the user with a form to fill out to create a group. Allows the user to specify the group name, contributors, subscribers, time of day contributors will recieve their EOD form, and the channel the thread will live in.\n\ndelete:\n------\nusage: /endyBot delete <group_name>\ndescription: Removes a group from the process and stops all scheduled messages from endyBot to submit EODs.\n\nlist:\n----\nusage: /endyBot list\ndescription: Provides all the groups currently added to endyBot and their corresponding number of contributors. It also identifies which groups the user who called the function is subscribed to.\n\nsubscribe:\n---------\nusage: /endyBot subscribe <group_name>\ndescription: subscribes the user who performs the command to the specified group. This acts as an opt-in to receive messages about the group.\n\nunsubscribe:\n-----------\nusage: /endyBot unsubscribe <group_name>\ndescription: unsubscribes the user who performs the command from the specified group.")
       break
     }
     default:
