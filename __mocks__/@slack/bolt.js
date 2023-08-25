@@ -14,6 +14,9 @@ module.exports = {
       },
       chat: {
         postMessage: jest.fn(() => Promise.resolve())
+      },
+      users: {
+        list: jest.fn(() => Promise.resolve())
       }
     }
   }))

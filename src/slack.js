@@ -270,4 +270,62 @@ async function postEODResponse (app, view, uid) {
   return res.message.blocks
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs }
+/**
+ * Uses the Slack API to get a list of all users in the workspace, as well as information about them.
+ *
+ * @param {JSON} app
+ * @returns The list of all users in the current slack workspace. Each user entry will follow this strucuture, as according to the Slack documentation:
+ * {
+ *  "id": "W07QCRPA4",
+ *  "team_id": "T0G9PQBBK",
+ *  "name": "glinda",
+ *  "deleted": false,
+ *  "color": "9f69e7",
+ *  "real_name": "Glinda Southgood",
+ *  "tz": "America/Los_Angeles",
+ *  "tz_label": "Pacific Daylight Time",
+ *  "tz_offset": -25200,
+ *  "profile": {
+ *    "avatar_hash": "8fbdd10b41c6",
+ *    "image_24": "https://a.slack-edge.com...png",
+ *    "image_32": "https://a.slack-edge.com...png",
+ *    "image_48": "https://a.slack-edge.com...png",
+ *    "image_72": "https://a.slack-edge.com...png",
+ *    "image_192": "https://a.slack-edge.com...png",
+ *    "image_512": "https://a.slack-edge.com...png",
+ *    "image_1024": "https://a.slack-edge.com...png",
+ *    "image_original": "https://a.slack-edge.com...png",
+ *    "first_name": "Glinda",
+ *    "last_name": "Southgood",
+ *    "title": "Glinda the Good",
+ *    "phone": "",
+ *    "skype": "",
+ *    "real_name": "Glinda Southgood",
+ *    "real_name_normalized": "Glinda Southgood",
+ *    "display_name": "Glinda the Fairly Good",
+ *    "display_name_normalized": "Glinda the Fairly Good",
+ *    "email": "glenda@south.oz.coven"
+ *  },
+ *  "is_admin": true,
+ *  "is_owner": false,
+ *  "is_primary_owner": false,
+ *  "is_restricted": false,
+ *  "is_ultra_restricted": false,
+ *  "is_bot": false,
+ *  "updated": 1480527098,
+ *  "has_2fa": false
+ * }
+ */
+async function getUserList (app) {
+  const usrList = await app.client.users.list()
+
+  if (usrList.ok != true) {
+    // error in API call
+    console.log(`Unable to get user list: ${usrList.error}`)
+    return usrList.error
+  }
+
+  return usrList.members
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, getUserList }

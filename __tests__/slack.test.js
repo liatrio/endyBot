@@ -331,4 +331,61 @@ describe('slack.js testing suite', () => {
       expect(res).toEqual(expectedRes)
     })
   })
+
+  describe('getUserList tests', () => {
+    const mockApp = new App({})
+
+    test('Successful API call', async () => {
+      // mocking api response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: true,
+        members: [
+          {
+            id: 'UID1234',
+            name: 'johnd',
+            real_name: 'John Doe',
+            tz: 'America/Los_Angeles'
+          },
+          {
+            id: 'UID5678',
+            name: 'johnm',
+            real_name: 'John Moe',
+            tz: 'America/Los_Angeles'
+          }
+        ]
+      })
+
+      // defining expected result and running test
+      const expectedRes = [
+        {
+          id: 'UID1234',
+          name: 'johnd',
+          real_name: 'John Doe',
+          tz: 'America/Los_Angeles'
+        },
+        {
+          id: 'UID5678',
+          name: 'johnm',
+          real_name: 'John Moe',
+          tz: 'America/Los_Angeles'
+        }
+      ]
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(expectedRes)
+    })
+
+    test('Unsuccessful API call', async () => {
+      // mocking failed API response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: false,
+        error: Error('Unable to get user list')
+      })
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(Error('Unable to get user list'))
+    })
+  })
 })
