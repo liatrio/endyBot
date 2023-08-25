@@ -311,5 +311,24 @@ describe('slack.js testing suite', () => {
 
       expect(res).toEqual(expectedRes)
     })
+
+    test('Unexpected value in private_metadata', async () => {
+      // overriding mocks from above
+      db.getGroup.mockResolvedValue(null)
+      // mocking view
+      const view = {
+        private_metadata: 'groupName hello',
+        state: {
+          values: 'Sample value'
+        }
+      }
+
+      // defining expected result and calling function
+      const expectedRes = Error('Group groupName hello not found.')
+
+      const res = await slack.postEODResponse(mockApp, view, '1234')
+
+      expect(res).toEqual(expectedRes)
+    })
   })
 })

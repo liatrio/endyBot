@@ -269,4 +269,43 @@ describe('formatEODResponse', () => {
 
     expect(res).toStrictEqual(expectedBlock)
   })
+
+  test('Unexpected field', () => {
+    // mock values
+    const values = {
+      diff_val: { diff_val: { value: 'Sample\n EOD' } }
+    }
+
+    // expected response
+    const expectedBlock = [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<@12345>\'s EOD Response*'
+        }
+      },
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Other user responses*'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Sample\n EOD'
+        }
+      }
+    ]
+
+    const res = helpers.formatEODResponse(values, uid)
+
+    expect(res).toStrictEqual(expectedBlock)
+  })
 })
