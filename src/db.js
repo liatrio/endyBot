@@ -22,6 +22,7 @@ async function addToDB (groupJson) {
     return null
   }
 }
+
 // List all group names and how many members they have
 async function listGroups () {
   const groups = await Group.find({})
@@ -37,4 +38,36 @@ async function listGroups () {
   return stringedResult
 }
 
-module.exports = { addToDB, listGroups }
+/**
+ * Takes either a group name or group ID and returns the db entry for that group
+ * MUST pass either groupName, groupID, or both
+ *
+ * @param {String} groupName
+ * @param {String} groupID
+ * @returns JSON of Group info from database, -1 on error.
+ */
+async function getGroup (groupName, groupID) {
+  const searchParams = {}
+
+  // if groupID is supplied, add it to the
+  if (groupID !== undefined) {
+    searchParams._id = groupID
+  }
+
+  if (groupName !== undefined) {
+    searchParams.name = groupName
+  }
+
+  if (JSON.stringify(searchParams) == '{}') {
+    console.log('Please supply either the groupID or group name.')
+    return -1
+  }
+
+  console.log(searchParams)
+
+  const resGroup = await Group.findOne(searchParams)
+  console.log(resGroup)
+  return resGroup
+}
+
+module.exports = { addToDB, listGroups, getGroup }

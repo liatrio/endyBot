@@ -1,67 +1,147 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+require('dotenv').config() // stores our organization link for slack
 
+/**
+ * creates a post in a specified channel
+ * @param {*} app
+ * @param {*} group
+ * @returns returns the timestamp of the post on success and null on failure
+*/
 async function createPost (app, group) {
   console.log(group)
   try {
     const cID = group.channel
     const groupname = group.name
-    const threadId = await app.client.chat.postMessage({
+    const res = await app.client.chat.postMessage({
       channel: cID,
       text: `${groupname} EOD :thread:`
     })
-    console.log('thread created')
-    return threadId.ts
+    return res.ts
   } catch (error) {
-    console.error('something happened while making the thread: ', error)
+    console.error(`something happened while making the thread\n group: ${group.name}\n channel: ${group.channel}\n error: `, error)
     return null
   }
 }
 
+/**
+ * sends a message to each contributor in our db for a respective group
+ * @param {*} app
+ * @param {*} group
+ * @returns 0 on success and -1 if there are no contributors
+ */
 async function dmUsers (app, group) {
-  if (group.contributors.length != 0) {
-    for (const user of group.contributors) {
-      try {
-        app.client.chat.postMessage({
-          channel: user,
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `It's time to write your EOD posts for *${group.name}!*`
-              }
-            },
-            {
-              type: 'divider'
-            },
-            {
-              type: 'actions',
-              elements: [
-                {
-                  type: 'button',
-                  text: {
-                    type: 'plain_text',
-                    text: 'Begin EOD Post',
-                    emoji: true
-                  },
-                  action_id: 'write_eod'
-                }
-              ]
-            }
-          ]
-        })
-        console.log('message sent')
-      } catch (error) {
-        console.error('something happened while sending dm: ', error)
-        continue
-      }
-    }
-  } else {
-    console.log('Error: no contributors in group')
+  if (!group.contributors.length) {
+    console.log('no contributors in the group!')
     return -1
   }
+  for (const user of group.contributors) {
+    try {
+      app.client.chat.postMessage({
+        channel: user,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `It's time to write your EOD posts for *${group.name}!*`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: {
+                  type: 'plain_text',
+                  text: 'Begin EOD Post',
+                  emoji: true
+                },
+                action_id: 'write_eod'
+              }
+            ]
+          }
+        ]
+      })
+      console.log('message sent')
+    } catch (error) {
+      console.error('something happened while sending dm: ', error)
+      continue
+    }
+  }
   return 0
+}
+
+/**
+ * checks that our input is not malformed or non existent
+ * @param {*} group
+ * @param {*} threadID
+ * @returns 0-3 0 being ok and 1-3 being different errors
+ */
+async function validateInput (group, threadID) {
+  if (!group.subscribers.length) {
+    console.log('group length is 0')
+    return 1
+  }
+  if (!group.channel) {
+    console.log('group channel is a null object')
+    return 2
+  }
+  if (!threadID) {
+    console.log('thread id is null')
+    return 3
+  }
+  return 0
+}
+
+/**
+ * sends a message of EOD link to subscribers stored in our db
+ * @param {*} app
+ * @param {*} group
+ * @param {*} threadID
+ * @returns variable check which should be 0 on success and 1,2, or 3 depending on the error
+ */
+async function dmSubs (app, group, threadID) {
+  const check = validateInput(group, threadID)
+  // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
+  const link = `${process.env.ORG}${group.channel}/p${threadID}`
+
+  for (const sub of group.subscribers) {
+    try {
+      app.client.chat.postMessage({
+        channel: sub,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `Hey there, here's ${group.name}'s EOD thread`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*${link}*`
+            }
+          }]
+      })
+    } catch (error) {
+      console.log('')
+      console.error(`something went wrong trying to send the message: \n \
+      sub: ${group.sub}\n \
+      group: ${group.name}\n \
+      error: `, error)
+      continue
+    }
+  }
+  return check
 }
 
 async function sendCreateModal (app, triggerId) {
@@ -158,4 +238,4 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost }
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, dmSubs }
