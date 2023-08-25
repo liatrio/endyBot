@@ -1,7 +1,7 @@
 // put any helpers here that don't have any other good spot to go
 /**
  *
- * @param {*} message - Should be in the form 'It's time to write your EOD post for \*[GROUP NAME]!\*"
+ * @param {String} message - Should be in the form 'It's time to write your EOD post for \*[GROUP NAME]!\*"
  * @returns The group name from the message above. Will return -1 on error.
  */
 function groupNameFromMessage (message) {
@@ -20,10 +20,10 @@ function groupNameFromMessage (message) {
 
 /**
  * Take an EOD modal response view and return a generated block object
- * @param {*} view The view returned from the modal response
+ * @param {JSON} view The view returned from the modal response
  * @returns A block object
  */
-function formatEODResponse (values, uid) {
+function formatEODResponse (responseObj, uid) {
   const block = [
     {
       type: 'section',
@@ -92,18 +92,41 @@ function formatEODResponse (values, uid) {
   }
 
   // looping through the values and adding blocks for each textbox the user filled out
-  Object.keys(values).forEach(function (key) {
+  Object.keys(responseObj).forEach(function (key) {
     // getting the text the user entered
-    const usrResponse = values[key][key].value
+    // Slack returns an object with the form { block_id: { block_id: { value: 'user response' } } },
+    // so grabbing the actual text looks a little gross
+    const usrResponse = responseObj[key][key].value
 
     // getting the associated header and adding user text
-    const responseBlock = headingMap[key]
-    responseBlock[2].text.text = usrResponse
+    let responseBlock
+    if (key in headingMap) {
+      responseBlock = headingMap[key]
+      responseBlock[2].text.text = usrResponse
+    } else {
+      responseBlock = [
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*Other user responses*'
+          }
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: usrResponse
+          }
+        }
+      ]
+    }
 
     // adding each new block to the block list
-    for (let i = 0; i < responseBlock.length; i++) {
-      block.push(responseBlock[i])
-    }
+    block.push(...responseBlock)
   })
 
   return block

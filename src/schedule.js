@@ -41,11 +41,9 @@ async function scheduleCronJob (allTasks, group, app) {
 
     // Update DB entry with ts
     const filter = { _id: group._id }
-    const update = { ts: ts }
+    const update = { ts }
 
-    await Group.findOneAndUpdate(filter, update, {
-      returnOriginal: false
-    })
+    await Group.findOneAndUpdate(filter, update)
 
     // Send the contributors their EOD prompt
     slack.dmUsers(app, group)

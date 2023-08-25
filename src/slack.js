@@ -244,6 +244,12 @@ async function postEODResponse (app, view, uid) {
   // get information about what thread to post the response in
   const groupName = view.private_metadata
   const group = await db.getGroup(groupName)
+  if (group == null) {
+    // indicates group was not found
+    const errorMsg = `Group ${groupName} not found.`
+    console.log(`Error positng EOD response: ${errorMsg}`)
+    return Error(errorMsg)
+  }
 
   // construct the response block
   const respBlock = helpers.formatEODResponse(view.state.values, uid)
