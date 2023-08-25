@@ -37,8 +37,13 @@ async function scheduleCronJob (allTasks, group, app) {
   // Schedule the eod cron job that will spawn the thread and dm the eod form to the contributors
   const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
-    // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
-    await slack.createPost(app, group)
+    const ts = await slack.createPost(app, group)
+
+    // Update DB entry with ts
+    const filter = { _id: group._id }
+    const update = { ts }
+
+    await Group.findOneAndUpdate(filter, update)
 
     // Send the contributors their EOD prompt
     slack.dmUsers(app, group)
@@ -49,7 +54,7 @@ async function scheduleCronJob (allTasks, group, app) {
   // Schedule the cron job to dm the subscribers at the end of each day
   const subscriberTask = cron.schedule('59 20 * * 1-5', async () => {
     // Send DM to subscribers
-
+    slack.dmSubs(app, group, group.ts)
   }, {
     timezone: 'America/Los_Angeles'
   })
