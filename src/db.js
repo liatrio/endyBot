@@ -23,18 +23,59 @@ async function addToDB (groupJson) {
   }
 }
 
-// List all group names and how many members they have
-async function listGroups () {
+/**
+ * Takes in the ID of the user who called the list function as a String. Returns a String that is printed from app.js
+ * List all group names and how many members they have
+ *
+ * @param {String} userID
+ * @returns String that contains the entire list print
+ */
+async function listGroups (userID) {
+  // Gather all groups from the database
   const groups = await Group.find({})
   if (groups.length == 0) {
     return 'No groups to be listed'
   }
 
+  // Set up arrays to hold the relevant info for printing
+  const subscribed = []
+  const unsubscribed = []
+
+  // Check all subscriber lists to populate arrays
+  for (const group of groups) {
+    if (group.subscribers.includes(userID)) {
+      subscribed.push(group)
+    } else {
+      unsubscribed.push(group)
+    }
+  }
+
+  // Set up string to be returned and printed from app.js
   let stringedResult = ''
 
-  for (const group of groups) {
-    stringedResult += group.name + ' --- Num Members: ' + group.contributors.length + '\n'
+  // Several different logic flow possibilities for building the string
+  // If the user isn't subbed to any groups, notify them. Else append all subbed groups to the return string
+  if (subscribed.length === 0) {
+    stringedResult += 'You aren\'t subscribed to any groups\n\n'
+  } else {
+    stringedResult += '*Groups you are subscribed to*\n*-----------------------------------*\n'
+    for (const group of subscribed) {
+      stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
+    }
+    stringedResult += '\n'
   }
+
+  // If the user is subbed to all groups, notify them. Else append all unsubbed groups to the return string
+  if (unsubscribed.length == 0) {
+    stringedResult += '\nYou\'re subscribed to every group. Way to be a team player!'
+  } else {
+    stringedResult += '\n*Groups you are not subscribed to*\n*---------------------------------------*\n'
+    for (const group of unsubscribed) {
+      stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
+    }
+  }
+
+  // Return fully formatted string to be printed
   return stringedResult
 }
 
@@ -70,13 +111,65 @@ async function getGroup (groupName, groupID) {
   return resGroup
 }
 
-async function addSubscriber (groupname /*, userInfo */) {
-  const group = getGroup(groupname, undefined)
-  if (group === undefined) {
-    return `No group exists with name ${groupname}`
+/**
+ * Takes in the name of a group and the ID of the user who called the function, both as Strings. Returns a String
+ * Function adds a userID to the subscriber list of the given group (return value gets printed from app.js)
+ *
+ * @param {String} groupname
+ * @param {String} userID
+ * @returns String that denotes either a success or failure message
+ */
+async function addSubscriber (groupname, userID) {
+  // Obtain group object that points to the database
+  const group = await getGroup(groupname, undefined)
+
+  // In case the group doesn't exist, notify the user
+  if (group === null) {
+    return `No group exists with name *${groupname}*`
   }
-  // group.subscribers.push(/*userInfo.id */)
+
+  // If the user is already subscribed to the group, notify them
+  if (group.subscribers.includes(userID)) {
+    return `You are already subscribed to *${groupname}*`
+  }
+
+  // Add the userID to the subscriber list and save the entry into the database
+  group.subscribers.push(userID)
   group.save()
+
+  // Notify user upon success
+  return `You are now subscribed to *${groupname}*!`
 }
 
-module.exports = { addToDB, listGroups, getGroup, addSubscriber }
+/**
+ * Takes in the name of a group and the ID of the user who called the function, both as Strings. Returns a String
+ * Function removes a userID from the subscriber list of the given group (return value gets printed from app.js)
+ *
+ * @param {String} groupname
+ * @param {String} userID
+ * @returns String that denotes either a success or failure message
+ */
+async function removeSubscriber (groupname, userID) {
+  // Obtain group object thayt points to the database
+  const group = await getGroup(groupname, undefined)
+
+  // In case the group doesn't exist, notify the user
+  if (group === null) {
+    return `No group exists with name *${groupname}*`
+  }
+
+  // As long as the user is subscribed to the group, unsubscribe them (remove ID from subscriber list)
+  if (group.subscribers.includes(userID)) {
+    // Set the subscriber list equal to itself, but without the userID in it, and save the entry into the database
+    group.subscribers = group.subscribers.filter(item => item !== userID)
+    group.save()
+
+    // Notify user upon success
+    return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`
+  }
+
+  // If the user was initially unsubscribed from the group, do nothing and notify them
+  return `You were already unsubscribed from *${groupname}*`
+}
+
+module.exports = { addToDB, listGroups, getGroup, addSubscriber, removeSubscriber }

@@ -31,21 +31,28 @@ schedule.startCronJobs(allTasks, app)
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
-  switch (command.text) {
+  const cmd = command.text.split(' ')
+  const request = cmd[0]
+  const groupname = cmd[1]
+  switch (request) {
     case 'create': {
       // open group create modal
       slack.sendCreateModal(app, command.trigger_id)
       break
     }
     case 'subscribe': {
-      const groupname = await slack.parseSubscribeCommand(command.text)
-      const res = await database.addSubscriber(groupname /*, userInfo */)
+      const res = await database.addSubscriber(groupname, command.user_id)
+      respond(res)
+      break
+    }
+    case 'unsubscribe': {
+      const res = await database.removeSubscriber(groupname, command.user_id)
       respond(res)
       break
     }
     case 'list': {
-      const data = await database.listGroups()
-      respond(`${data}`)
+      const data = await database.listGroups(command.user_id)
+      respond(data)
       break
     }
     case 'help': {
