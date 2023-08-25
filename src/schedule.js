@@ -74,6 +74,24 @@ async function scheduleCronJob (allTasks, group, app) {
   return 0
 }
 
+// function to remove all the tasks for a specific group
+function removeTasks (allTasks, groupName) {
+  if (allTasks.length !== 0) {
+    let i = 0
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        entry.eodTask.stop()
+        entry.subscriberTask.stop()
+        allTasks.splice(i, 1)
+        console.log('New list length after deleting: ' + allTasks.length)
+        return 1
+      }
+      i += 1
+    }
+  }
+  return 0
+}
+
 function convertPostTimeToCron (hour) {
   // No matter whether the hour value comes in like "4" or "04", this will convert it to "04" and then map it back to a valid cron time
   // Times should always be coming in as 2 digits, but just in case something slips through, this prevents things from breaking
@@ -123,4 +141,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeTasks }

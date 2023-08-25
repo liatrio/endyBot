@@ -115,7 +115,7 @@ describe('slack.js testing suite', () => {
     })
 
     test('handle error', async () => {
-      const mockGroup = {}
+      const mockGroup = { }
 
       const res = await slack.createPost(mockApp, mockGroup)
       expect(res).toBe(null)
