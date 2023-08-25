@@ -37,8 +37,13 @@ async function scheduleCronJob (allTasks, group, app) {
   // Schedule the eod cron job that will spawn the thread and dm the eod form to the contributors
   const eodTask = cron.schedule(cronTime, async () => {
     // Create the initial thread
-    // NOTE: we still need to handle the returning thread timestamp from createPost so the app knows where to reply to
-    slack.createPost(app, group)
+    const ts = await slack.createPost(app, group)
+
+    // Update DB entry with ts
+    const filter = { _id: group._id }
+    const update = { ts }
+
+    await Group.findOneAndUpdate(filter, update)
 
     // Send the contributors their EOD prompt
     slack.dmUsers(app, group)
@@ -49,7 +54,7 @@ async function scheduleCronJob (allTasks, group, app) {
   // Schedule the cron job to dm the subscribers at the end of each day
   const subscriberTask = cron.schedule('59 20 * * 1-5', async () => {
     // Send DM to subscribers
-
+    slack.dmSubs(app, group, group.ts)
   }, {
     timezone: 'America/Los_Angeles'
   })
@@ -57,8 +62,8 @@ async function scheduleCronJob (allTasks, group, app) {
   // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
   const entry = {
     group: group.name,
-    eodTask: eodTask,
-    subscriberTask: subscriberTask
+    eodTask,
+    subscriberTask
   }
 
   // now we can find this entry later if the group needs to be deleted
@@ -66,6 +71,24 @@ async function scheduleCronJob (allTasks, group, app) {
 
   console.log(`Group '${group.name}' added to scheduler`)
   console.log(`# of groups in scheduler: ${allTasks.length}`)
+  return 0
+}
+
+// function to remove all the tasks for a specific group
+function removeTasks (allTasks, groupName) {
+  if (allTasks.length !== 0) {
+    let i = 0
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        entry.eodTask.stop()
+        entry.subscriberTask.stop()
+        allTasks.splice(i, 1)
+        console.log('New list length after deleting: ' + allTasks.length)
+        return 1
+      }
+      i += 1
+    }
+  }
   return 0
 }
 
@@ -118,4 +141,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeTasks }
