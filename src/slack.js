@@ -1,5 +1,7 @@
 // Put all functions using the slack API here
 const views = require('./modal-views')
+const db = require('./db')
+const helpers = require('./helpers')
 require('dotenv').config() // stores our organization link for slack
 
 /**
@@ -128,7 +130,7 @@ async function dmSubs (app, group, threadID) {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `*${link}*`
+              text: `${link}`
             }
           }]
       })
@@ -238,4 +240,34 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, dmSubs }
+async function postEODResponse (app, view, uid) {
+  // get information about what thread to post the response in
+  const groupName = view.private_metadata
+  const group = await db.getGroup(groupName)
+  if (group == null) {
+    // indicates group was not found
+    const errorMsg = `Group ${groupName} not found.`
+    console.log(`Error positng EOD response: ${errorMsg}`)
+    return Error(errorMsg)
+  }
+
+  // construct the response block
+  const respBlock = helpers.formatEODResponse(view.state.values, uid)
+
+  // send message to thread
+  const res = await app.client.chat.postMessage({
+    channel: group.channel,
+    thread_ts: group.ts, // this is what makes this message a thread reply rather than a whole new message
+    blocks: respBlock,
+    text: 'EOD Response'
+  })
+
+  if (res.ok != true) {
+    console.log(`Error posting EOD response: ${res.error}`)
+    return res.error
+  }
+
+  return res.message.blocks
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs }

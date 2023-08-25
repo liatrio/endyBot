@@ -6,6 +6,10 @@ const Group = require('../db-schemas/group')
 const schedule = require('../src/schedule')
 const { App } = require('@slack/bolt')
 
+// mocking out slack.js and db.js since they're used in schedule.js
+jest.mock('../src/slack')
+jest.mock('../src/db')
+
 describe('schedule.js testing suite', () => {
   const app = new App({})
 
