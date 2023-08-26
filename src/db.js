@@ -24,19 +24,26 @@ async function addToDB (groupJson) {
 }
 
 // Deletes the group
-async function deleteGroup (groupName) {
+// Slack needs to be an argument because it can't be included at the top of this file as a module...
+// this is because the db module is being included in slack.js, so including slack in this file causes a circular reference and breaks things
+// so to solve that issue, slack is passed in from app.js, where it is safely included as a module
+// this is all just to avoid having any logic whatsoever in app.js. We don't notifySubsAboutGroupDeletion called unless we're sure the group was removed.
+async function deleteGroup (app, groupName, userID, slack) {
   // getGroup's "findOne" returns null if no matches were found, i.e. invalid group name
-  if (await getGroup(groupName) == null) {
-    return `${groupName} is not a valid group`
+  const group = await getGroup(groupName)
+  if (group === null) {
+    return `No group exists with name *${groupName}*`
   }
 
-  // if a valid groupname was passed, remove it and return results
+  // if a valid groupname was passed, remove it, notify the subscribers and return results
   try {
     const result = await Group.deleteOne({ name: groupName })
     if (result.deletedCount > 0) {
-      return `${groupName} was removed successfully`
+      // Passing in the userID of the deleteGroup function caller so the function can print which user deleted the group
+      slack.notifySubsAboutGroupDeletion(app, group, userID)
+      return `*${groupName}* was removed successfully`
     } else {
-      return `${groupName} was not found`
+      return `*${groupName}* was not found`
     }
   } catch (error) {
     return `Error while deleting ${groupName}: ${error.message}`

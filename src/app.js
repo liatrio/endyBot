@@ -56,7 +56,12 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
     case 'delete':{
       // calls all necessary functions to delete a group
       schedule.removeTasks(allTasks, cmd)
-      const res = await database.deleteGroup(group)
+
+      // Passing app to the function so it can pass it to the notifySubsAboutGroupDeletion function. Keeps logic out of app.js
+      // Also have to pass the slack module to the function so it can call a function from slack.js. This is because if the slack module were to be
+      // included in db.js, that would create a circular reference and node will throw an error. The db module is included in slack.js (and needs to be), so
+      // this is a safe way to give the db module access to a function in slack.js WITHOUT causing a circular reference. Again, this is to keep logic out of app.js
+      const res = await database.deleteGroup(app, group, command.user_id, slack)
       respond(res)
       break
     }

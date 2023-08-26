@@ -270,4 +270,39 @@ async function postEODResponse (app, view, uid) {
   return res.message.blocks
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs }
+/**
+ * sends a message to each subscriber of a group when it is deleted
+ * @param {*} app
+ * @param {*} group
+ * @param {String} userID
+ * @returns 0 on success and null if there are no subscribers
+ */
+async function notifySubsAboutGroupDeletion (app, group, userID) {
+  if (group.subscribers.length == 0) {
+    console.log('No subscribers in the group')
+    return null
+  }
+  // Send a message to each subscriber notifying them what group was deleted, and which user deleted it
+  for (const user of group.subscribers) {
+    try {
+      app.client.chat.postMessage({
+        channel: user,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `Group *${group.name}* was deleted by <@${userID}>. You're receiving this notification because you were a subscriber of the group.\n\nYou will no longer receive EOD thread links for the group.`
+            }
+          }
+        ]
+      })
+    } catch (error) {
+      console.error(`something happened while notifying subscriber ${user} about ${group.name} deletion: `, error)
+      continue
+    }
+  }
+  return 0
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion }
