@@ -191,3 +191,27 @@ describe('deleteGroup function', () => {
     expect(res).toEqual('testGroup was not found')
   })
 })
+
+// This function only returns a concatenated string, like the listGroup command, so the only option is to test the returned string
+describe('describeGroup testing suite', () => {
+  test('Describe existing group', async () => {
+    const group = {
+      name: 'Group 1',
+      contributors: ['UID123'],
+      subscribers: ['SID123'],
+      postTime: 14,
+      channel: 'test-channel'
+    }
+    mockingoose(Group).toReturn(group, 'findOne')
+    const result = await db.describeGroup('Group 1')
+    expect(result).toBe('Here\'s all the information for *Group 1*\n\n*Contributors*: <@UID123>  \n\n*Subscribers*: <@SID123>  \n\n*Channel*: <#test-channel>\n\n*EOD Time*: 14:00 PST\n')
+  })
+
+  test('Describe nonexistent group', async () => {
+    // If the group doesn't exist, getGroup will return null
+    mockingoose(Group).toReturn(null, 'findOne')
+
+    const result = await db.describeGroup('bad group name')
+    expect(result).toBe('No group exists with name *bad group name*')
+  })
+})

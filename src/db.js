@@ -87,4 +87,47 @@ async function getGroup (groupName, groupID) {
   return resGroup
 }
 
-module.exports = { addToDB, listGroups, getGroup, deleteGroup }
+/**
+ * Takes a group name as a String, returns a String (return value is printed from app.js)
+ * Displays relevant information about specified group
+ *
+ * @param {String} groupname
+ * @returns String
+ */
+async function describeGroup (groupname) {
+  // Obtain group object thayt points to the database
+  const group = await getGroup(groupname, undefined)
+
+  // In case the group doesn't exist, notify the user
+  if (group === null) {
+    return `No group exists with name *${groupname}*`
+  }
+
+  // Set up string to be returned and printed from app.js
+  let stringedResult = ''
+
+  stringedResult += `Here's all the information for *${groupname}*\n\n`
+
+  // Display all contributors of the group
+  stringedResult += '*Contributors*: '
+  for (const user of group.contributors) {
+    stringedResult += `<@${user}>  `
+  }
+
+  // Display all subscribers of the group
+  stringedResult += '\n\n*Subscribers*: '
+  for (const user of group.subscribers) {
+    stringedResult += `<@${user}>  `
+  }
+
+  // Display the channel the group is tied to
+  stringedResult += `\n\n*Channel*: <#${group.channel}>\n`
+
+  // Display the time that the EOD jobs run
+  // ATTENTION: Refactor this once we have timezones done... or just leave as PST
+  stringedResult += `\n*EOD Time*: ${group.postTime}:00 PST\n`
+
+  return stringedResult
+}
+
+module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup }
