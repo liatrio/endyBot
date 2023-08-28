@@ -23,27 +23,22 @@ async function addToDB (groupJson) {
   }
 }
 
-// Deletes the group
-// Slack needs to be an argument because it can't be included at the top of this file as a module...
-// this is because the db module is being included in slack.js, so including slack in this file causes a circular reference and breaks things
-// so to solve that issue, slack is passed in from app.js, where it is safely included as a module
-// this is all just to avoid having any logic whatsoever in app.js. We don't notifySubsAboutGroupDeletion called unless we're sure the group was removed.
-async function deleteGroup (app, groupName, userID, slack) {
-  // getGroup's "findOne" returns null if no matches were found, i.e. invalid group name
-  const group = await getGroup(groupName)
-  if (group === null) {
-    return `No group exists with name *${groupName}*`
-  }
-
-  // if a valid groupname was passed, remove it, notify the subscribers and return results
+/**
+ * Deletes a group
+ * Takes in a String, and returns a String
+ *
+ * @param {String} groupName
+ * @returns String that expresses success or failure
+ */
+async function deleteGroup (groupName) {
+  // The groupName being passed in has already been verified by handleDeleteGroup in app-helper
+  // remove the group, notify the subscribers and return results
   try {
     const result = await Group.deleteOne({ name: groupName })
     if (result.deletedCount > 0) {
-      // Passing in the userID of the deleteGroup function caller so the function can print which user deleted the group
-      slack.notifySubsAboutGroupDeletion(app, group, userID)
       return `*${groupName}* was removed successfully`
     } else {
-      return `*${groupName}* was not found`
+      return `*${groupName}* was not deleted`
     }
   } catch (error) {
     return `Error while deleting ${groupName}: ${error.message}`
@@ -68,42 +63,50 @@ async function listGroups (userID) {
   const subscribed = []
   const unsubscribed = []
 
-  // Check all subscriber lists to populate arrays
-  for (const group of groups) {
-    if (group.subscribers.includes(userID)) {
-      subscribed.push(group)
+  try {
+    // Check all subscriber lists to populate arrays
+    for (const group of groups) {
+      if (group.subscribers.includes(userID)) {
+        subscribed.push(group)
+      } else {
+        unsubscribed.push(group)
+      }
+    }
+  } catch (error) {
+    return `Error while parsing through subscriber lists in listGroups: ${error.message}`
+  }
+
+  try {
+    // Set up string to be returned and printed from app.js
+    let stringedResult = ''
+
+    // Several different logic flow possibilities for building the string
+    // If the user isn't subbed to any groups, notify them. Else append all subbed groups to the return string
+    if (subscribed.length === 0) {
+      stringedResult += 'You aren\'t subscribed to any groups\n\n'
     } else {
-      unsubscribed.push(group)
+      stringedResult += '*Groups you are subscribed to*\n*-----------------------------------*\n'
+      for (const group of subscribed) {
+        stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
+      }
+      stringedResult += '\n'
     }
-  }
 
-  // Set up string to be returned and printed from app.js
-  let stringedResult = ''
-
-  // Several different logic flow possibilities for building the string
-  // If the user isn't subbed to any groups, notify them. Else append all subbed groups to the return string
-  if (subscribed.length === 0) {
-    stringedResult += 'You aren\'t subscribed to any groups\n\n'
-  } else {
-    stringedResult += '*Groups you are subscribed to*\n*-----------------------------------*\n'
-    for (const group of subscribed) {
-      stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
+    // If the user is subbed to all groups, notify them. Else append all unsubbed groups to the return string
+    if (unsubscribed.length == 0) {
+      stringedResult += '\nYou\'re subscribed to every group. Way to be a team player!'
+    } else {
+      stringedResult += '\n*Groups you are not subscribed to*\n*---------------------------------------*\n'
+      for (const group of unsubscribed) {
+        stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
+      }
     }
-    stringedResult += '\n'
-  }
 
-  // If the user is subbed to all groups, notify them. Else append all unsubbed groups to the return string
-  if (unsubscribed.length == 0) {
-    stringedResult += '\nYou\'re subscribed to every group. Way to be a team player!'
-  } else {
-    stringedResult += '\n*Groups you are not subscribed to*\n*---------------------------------------*\n'
-    for (const group of unsubscribed) {
-      stringedResult += `*${group.name}* --- Contributors: ${group.contributors.length}\n`
-    }
+    // Return fully formatted string to be printed
+    return stringedResult
+  } catch (error) {
+    return `Error while concatenating string in listGroups: ${error.message}`
   }
-
-  // Return fully formatted string to be printed
-  return stringedResult
 }
 
 /**
@@ -152,17 +155,21 @@ async function addSubscriber (groupname, userID) {
     return `No group exists with name *${groupname}*`
   }
 
-  // If the user is already subscribed to the group, notify them
-  if (group.subscribers.includes(userID)) {
-    return `You are already subscribed to *${groupname}*`
+  try {
+    // If the user is already subscribed to the group, notify them
+    if (group.subscribers.includes(userID)) {
+      return `You are already subscribed to *${groupname}*`
+    }
+
+    // Add the userID to the subscriber list and save the entry into the database
+    group.subscribers.push(userID)
+    group.save()
+
+    // Notify user upon success
+    return `You are now subscribed to *${groupname}*!`
+  } catch (error) {
+    return `Error while adding subscriber: ${error.message}`
   }
-
-  // Add the userID to the subscriber list and save the entry into the database
-  group.subscribers.push(userID)
-  group.save()
-
-  // Notify user upon success
-  return `You are now subscribed to *${groupname}*!`
 }
 
 /**
@@ -182,18 +189,22 @@ async function removeSubscriber (groupname, userID) {
     return `No group exists with name *${groupname}*`
   }
 
-  // As long as the user is subscribed to the group, unsubscribe them (remove ID from subscriber list)
-  if (group.subscribers.includes(userID)) {
-    // Set the subscriber list equal to itself, but without the userID in it, and save the entry into the database
-    group.subscribers = group.subscribers.filter(item => item !== userID)
-    group.save()
+  try {
+    // As long as the user is subscribed to the group, unsubscribe them (remove ID from subscriber list)
+    if (group.subscribers.includes(userID)) {
+      // Set the subscriber list equal to itself, but without the userID in it, and save the entry into the database
+      group.subscribers = group.subscribers.filter(item => item !== userID)
+      group.save()
 
-    // Notify user upon success
-    return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`
+      // Notify user upon success
+      return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`
+    }
+
+    // If the user was initially unsubscribed from the group, do nothing and notify them
+    return `You were already unsubscribed from *${groupname}*`
+  } catch (error) {
+    return `Error while removing subscriber: ${error.message}`
   }
-
-  // If the user was initially unsubscribed from the group, do nothing and notify them
-  return `You were already unsubscribed from *${groupname}*`
 }
 
 module.exports = { addToDB, listGroups, getGroup, deleteGroup, addSubscriber, removeSubscriber }

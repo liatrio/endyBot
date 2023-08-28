@@ -278,6 +278,7 @@ async function postEODResponse (app, view, uid) {
  * @returns 0 on success and null if there are no subscribers
  */
 async function notifySubsAboutGroupDeletion (app, group, userID) {
+  // The passed in group has already been verified by handleGroupDeletion in app-helper
   if (group.subscribers.length == 0) {
     console.log('No subscribers in the group')
     return null
