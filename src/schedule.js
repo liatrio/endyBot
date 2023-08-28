@@ -171,11 +171,11 @@ function removeSubscriberTask (allTasks, groupName, subscriber) {
       if (entry.group === groupName) {
         let i = 0
         // look for subscribers task
-        for (const single of entry.subscriberTask) {
+        for (const single of entry.subTasks) {
           // remove
           if (single.name === subscriber) {
-            single.stop()
-            entry.subscriberTask.splice(i, 1)
+            single.task.stop()
+            entry.subTasks.splice(i, 1)
             break
           }
           i += 1

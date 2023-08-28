@@ -346,4 +346,89 @@ describe('schedule.js testing suite', () => {
       expect(result).toBeNull()
     })
   })
+
+  describe('removeSubscriberTask tests', () => {
+    const list = [
+      {
+        group: 'test_group1',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'alice',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      },
+      {
+        group: 'test_group2',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'endy',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      },
+      {
+        group: 'test_group3',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'robert',
+            task: {
+              stop: jest.fn()
+            }
+          },
+          {
+            name: 'bobby',
+            task: {
+              stop: jest.fn()
+            }
+          },
+          {
+            name: 'bob',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      }
+    ]
+
+    test('removeSubscriberTask', () => {
+      schedule.removeSubscriberTask(list, 'test_group3', 'bob')
+      expect(list[2].subTasks.length).toEqual(2)
+    })
+  })
 })
