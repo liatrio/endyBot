@@ -17,7 +17,7 @@ describe('schedule.js testing suite', () => {
     const groupName = 'test_group2'
     test('removing something from the task list', () => {
       const list = []
-      const res = schedule.removeTasks(list, groupName)
+      const res = schedule.removeAllTasks(list, groupName)
       expect(res).toBe(0)
     })
 
@@ -25,33 +25,66 @@ describe('schedule.js testing suite', () => {
       const list = [
         {
           group: 'test_group1',
-          eodTask: {
+          threadTask: {
             stop: jest.fn()
           },
-          subscriberTask: {
-            stop: jest.fn()
-          }
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
         },
         {
           group: 'test_group2',
-          eodTask: {
+          threadTask: {
             stop: jest.fn()
           },
-          subscriberTask: {
-            stop: jest.fn()
-          }
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
         },
         {
           group: 'test_group3',
-          eodTask: {
+          threadTask: {
             stop: jest.fn()
           },
-          subscriberTask: {
-            stop: jest.fn()
-          }
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
         }
       ]
-      const res = schedule.removeTasks(list, groupName)
+      const res = schedule.removeAllTasks(list, groupName)
       expect(res).toBe(1)
       expect(list.length).toBe(2)
     })

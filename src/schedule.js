@@ -80,13 +80,14 @@ function removeAllTasks (allTasks, groupName) {
     let i = 0
     for (const entry of allTasks) {
       if (entry.group === groupName) {
+        entry.threadTask.stop()
         // loop to stop all contributor tasks
-        for (const singleEod of entry.eodTask) {
-          singleEod.stop()
+        for (const singleEod of entry.contribTasks) {
+          singleEod.task.stop()
         }
         // loop to stop all subscriber tasks
-        for (const singleSub of entry.subscriberTask) {
-          singleSub.stop()
+        for (const singleSub of entry.subTasks) {
+          singleSub.task.stop()
         }
         allTasks.splice(i, 1)
         console.log('New list length after deleting: ' + allTasks.length)
