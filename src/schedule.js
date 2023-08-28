@@ -73,15 +73,15 @@ async function scheduleCronJob (allTasks, group, app) {
     // getting index 0 because filter returns a list
     const tz = usrInfo[0].tz
 
+    // getting uid
+    const contrib = usrInfo[0].id
+
     // creating cron task for single user
     const contribTask = cron.schedule(cronTime, async () => {
-      slack.dmUsers(app, group)
+      slack.dmUsers(app, group, contrib)
     }, {
       timezone: tz
     })
-
-    // getting uid
-    const contrib = usrInfo[0].id
 
     const contribObj = {
       name: contrib,
@@ -105,15 +105,15 @@ async function scheduleCronJob (allTasks, group, app) {
     // getting index 0 because filter returns a list
     const tz = usrInfo[0].tz
 
+    // getting uid
+    const sub = usrInfo[0].id
+
     // creating cron task for single user
     const subTask = cron.schedule('59 20 * * 1-5', async () => {
-      slack.dmSubs(app, group, group.ts)
+      slack.dmSubs(app, group, sub, group.ts)
     }, {
       timezone: tz
     })
-
-    // getting uid
-    const sub = usrInfo[0].id
 
     const subObj = {
       name: sub,
