@@ -16,6 +16,160 @@ jest.mock('../src/db')
 describe('schedule.js testing suite', () => {
   const app = new App({})
 
+  describe('removeTasks function with empty list', () => {
+    const groupName = 'test_group2'
+    test('removing something from the task list', () => {
+      const list = []
+      const res = schedule.removeAllTasks(list, groupName)
+      expect(res).toBe(0)
+    })
+
+    test('removeTasks function valid', () => {
+      const list = [
+        {
+          group: 'test_group1',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        },
+        {
+          group: 'test_group2',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        },
+        {
+          group: 'test_group3',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        }
+      ]
+      const res = schedule.removeAllTasks(list, groupName)
+      expect(res).toBe(1)
+      expect(list.length).toBe(2)
+    })
+  })
+
+  describe('removeTasks function with empty list', () => {
+    const groupName = 'test_group2'
+    test('removing something from the task list', () => {
+      const list = []
+      const res = schedule.removeAllTasks(list, groupName)
+      expect(res).toBe(0)
+    })
+
+    test('removeTasks function valid', () => {
+      const list = [
+        {
+          group: 'test_group1',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        },
+        {
+          group: 'test_group2',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        },
+        {
+          group: 'test_group3',
+          threadTask: {
+            stop: jest.fn()
+          },
+          contribTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ],
+          subTasks: [
+            {
+              task: {
+                stop: jest.fn()
+              }
+            }
+          ]
+        }
+      ]
+      const res = schedule.removeAllTasks(list, groupName)
+      expect(res).toBe(1)
+      expect(list.length).toBe(2)
+    })
+  })
+
   describe('startCronJobs tests', () => {
     test('Handle cron job setup from single group in DB', async () => {
       const groups = [{

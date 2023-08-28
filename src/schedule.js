@@ -138,6 +138,53 @@ async function scheduleCronJob (allTasks, group, app) {
   return 0
 }
 
+// function to remove all the tasks for a specific group
+function removeAllTasks (allTasks, groupName) {
+  if (allTasks.length !== 0) {
+    let i = 0
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        entry.threadTask.stop()
+        // loop to stop all contributor tasks
+        for (const singleEod of entry.contribTasks) {
+          singleEod.task.stop()
+        }
+        // loop to stop all subscriber tasks
+        for (const singleSub of entry.subTasks) {
+          singleSub.task.stop()
+        }
+        allTasks.splice(i, 1)
+        console.log('New list length after deleting: ' + allTasks.length)
+        return 1
+      }
+      i += 1
+    }
+  }
+  return 0
+}
+
+// function to remove a single subscriber task (for unsubscribe functionality)
+function removeSubscriberTask (allTasks, groupName, subscriber) {
+  if (allTasks.length != 0) {
+    // look for group
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        let i = 0
+        // look for subscribers task
+        for (const single of entry.subscriberTask) {
+          // remove
+          if (single.name === subscriber) {
+            single.stop()
+            entry.subscriberTask.splice(i, 1)
+            break
+          }
+          i += 1
+        }
+      }
+    }
+  }
+}
+
 function convertPostTimeToCron (hour) {
   // No matter whether the hour value comes in like "4" or "04", this will convert it to "04" and then map it back to a valid cron time
   // Times should always be coming in as 2 digits, but just in case something slips through, this prevents things from breaking
@@ -187,4 +234,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeAllTasks, removeSubscriberTask }
