@@ -140,46 +140,40 @@ async function scheduleCronJob (allTasks, group, app) {
 
 // function to remove all the tasks for a specific group
 function removeAllTasks (allTasks, groupName) {
-  if (allTasks.length !== 0) {
-    let i = 0
-    for (const entry of allTasks) {
-      if (entry.group === groupName) {
-        entry.threadTask.stop()
-        // loop to stop all contributor tasks
-        for (const singleEod of entry.contribTasks) {
-          singleEod.task.stop()
-        }
-        // loop to stop all subscriber tasks
-        for (const singleSub of entry.subTasks) {
-          singleSub.task.stop()
-        }
-        allTasks.splice(i, 1)
-        console.log('New list length after deleting: ' + allTasks.length)
-        return 1
+  let i = 0
+  for (const entry of allTasks) {
+    if (entry.group === groupName) {
+      entry.threadTask.stop()
+      // loop to stop all contributor tasks
+      for (const singleEod of entry.contribTasks) {
+        singleEod.task.stop()
       }
-      i += 1
+      // loop to stop all subscriber tasks
+      for (const singleSub of entry.subTasks) {
+        singleSub.task.stop()
+      }
+      allTasks.splice(i, 1)
+      break
     }
+    i += 1
   }
-  return 0
 }
 
 // function to remove a single subscriber task (for unsubscribe functionality)
 function removeSubscriberTask (allTasks, groupName, subscriber) {
-  if (allTasks.length != 0) {
-    // look for group
-    for (const entry of allTasks) {
-      if (entry.group === groupName) {
-        let i = 0
-        // look for subscribers task
-        for (const single of entry.subTasks) {
-          // remove
-          if (single.name === subscriber) {
-            single.task.stop()
-            entry.subTasks.splice(i, 1)
-            break
-          }
-          i += 1
+  // look for group
+  for (const entry of allTasks) {
+    if (entry.group === groupName) {
+      let i = 0
+      // look for subscribers task
+      for (const single of entry.subTasks) {
+        // remove
+        if (single.name === subscriber) {
+          single.task.stop()
+          entry.subTasks.splice(i, 1)
+          break
         }
+        i += 1
       }
     }
   }
