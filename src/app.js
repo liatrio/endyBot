@@ -3,6 +3,7 @@ const slack = require('./slack')
 const database = require('./db')
 const schedule = require('./schedule')
 const helpers = require('./helpers')
+const appHelper = require('./app-helper')
 require('dotenv').config()
 
 // setting up app
@@ -35,7 +36,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
   // Might want to flush this out to a full parse command similar to groupyBot but for now to access delete I need just the delete keyword
   const parsed = command.text.split(' ')
   const cmd = parsed[0]
-  const group = parsed[1]
+  const groupName = parsed[1]
 
   switch (cmd) {
     case 'create':{
@@ -44,24 +45,17 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       break
     }
     case 'subscribe': {
-      const res = await database.addSubscriber(group, command.user_id)
+      const res = await database.addSubscriber(groupName, command.user_id)
       respond(res)
       break
     }
     case 'unsubscribe': {
-      const res = await database.removeSubscriber(group, command.user_id)
+      const res = await database.removeSubscriber(groupName, command.user_id)
       respond(res)
       break
     }
     case 'delete':{
-      // calls all necessary functions to delete a group
-      schedule.removeTasks(allTasks, cmd)
-
-      // Passing app to the function so it can pass it to the notifySubsAboutGroupDeletion function. Keeps logic out of app.js
-      // Also have to pass the slack module to the function so it can call a function from slack.js. This is because if the slack module were to be
-      // included in db.js, that would create a circular reference and node will throw an error. The db module is included in slack.js (and needs to be), so
-      // this is a safe way to give the db module access to a function in slack.js WITHOUT causing a circular reference. Again, this is to keep logic out of app.js
-      const res = await database.deleteGroup(app, group, command.user_id, slack)
+      const res = await appHelper.handleGroupDelete(app, allTasks, groupName, command.user_id)
       respond(res)
       break
     }
