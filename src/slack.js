@@ -34,7 +34,7 @@ async function createPost (app, group) {
  */
 async function dmUsers (app, group, user) {
   try {
-    app.client.chat.postMessage({
+    await app.client.chat.postMessage({
       channel: user,
       blocks: [
         {
@@ -64,10 +64,11 @@ async function dmUsers (app, group, user) {
       ]
     })
     console.log('message sent')
+    return 0
   } catch (error) {
     console.error('something happened while sending dm: ', error)
+    return -1
   }
-  return 0
 }
 
 /**
