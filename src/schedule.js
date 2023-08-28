@@ -10,7 +10,6 @@ async function startCronJobs (allTasks, app) {
   const groups = await Group.find({})
   if (groups.length !== 0) {
     for (const group of groups) {
-      console.log(group)
       // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
       await scheduleCronJob(allTasks, group, app)
     }
@@ -20,57 +19,122 @@ async function startCronJobs (allTasks, app) {
   return null
 }
 
-// create a cron job for a group. this job will persist until the app is reloaded or it is stopped upon group deletion
+/**
+ * Schedules all necessary tasks for a group and adds an entry to allTasks containing the group name,
+ * the thread creation task, a list of contributor tasks, and a list of subscriber tasks
+ * @param {Array} allTasks
+ * @param {Group_Entry} group
+ * @param {Bolt_App} app
+ * @returns 0 on success, null on error
+ */
 async function scheduleCronJob (allTasks, group, app) {
   if (group == null) {
     return null
   }
 
-  // Before creating the JSON object, we need to convert the time (ie '12') to a cron string (ie '0 12 * * 1-5')
-  // If an invalid time snuck in, log the error and don't schedule the job
+  // get user list so we can access contributor and subscriber timezones
+  const usrList = await slack.getUserList(app)
+  if (typeof usrList != 'object') {
+    console.log('Unable to schedule cron job: Unable to get user list from Slack.')
+    return null
+  }
+
+  // convert db postTime to cron time
   const cronTime = convertPostTimeToCron(group.postTime)
   if (cronTime == null) {
     console.log(`Error: cannot add group '${group.name}' to schedule because an invalid time was entered`)
     return null
   }
 
-  // Schedule the eod cron job that will spawn the thread and dm the eod form to the contributors
-  const eodTask = cron.schedule(cronTime, async () => {
-    // Create the initial thread
+  // Scheduling the thread post
+  const threadTask = cron.schedule(cronTime, async () => {
+    // create the thread
     const ts = await slack.createPost(app, group)
 
-    // Update DB entry with ts
+    // update the DB entry with thread's ts
     const filter = { _id: group._id }
     const update = { ts }
-
     await Group.findOneAndUpdate(filter, update)
-
-    // Send the contributors their EOD prompt
-    slack.dmUsers(app, group)
   }, {
-    timezone: 'America/Los_Angeles'
+    timezone: 'America/Atikokan' // EST
   })
 
-  // Schedule the cron job to dm the subscribers at the end of each day
-  const subscriberTask = cron.schedule('59 20 * * 1-5', async () => {
-    // Send DM to subscribers
-    slack.dmSubs(app, group, group.ts)
-  }, {
-    timezone: 'America/Los_Angeles'
-  })
+  // Scheduling the contriutor reminders
+  const contribTasks = []
 
+  for (let i = 0; i < group.contributors.length; i++) {
+    // get timezone
+    const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i])
+    if (usrInfo.length != 1) {
+      // unable to locate user, try to add other group memebers
+      console.log('Error: Unable to schedule task; could not find contributor')
+      continue
+    }
+    // getting index 0 because filter returns a list
+    const tz = usrInfo[0].tz
+
+    // creating cron task for single user
+    const contribTask = cron.schedule(cronTime, async () => {
+      slack.dmUsers(app, group)
+    }, {
+      timezone: tz
+    })
+
+    // getting uid
+    const contrib = usrInfo[0].id
+
+    const contribObj = {
+      name: contrib,
+      task: contribTask
+    }
+
+    contribTasks.push(contribObj)
+  }
+
+  // Scheduling the subscriber messages
+  const subTasks = []
+
+  for (let i = 0; i < group.subscribers.length; i++) {
+    // get timezone
+    const usrInfo = usrList.filter((usr) => usr.id == group.subscribers[i])
+    if (usrInfo.length != 1) {
+      // unable to locate user, try to add other group memebers
+      console.log('Error: Unable to schedule task; could not find subscriber')
+      continue
+    }
+    // getting index 0 because filter returns a list
+    const tz = usrInfo[0].tz
+
+    // creating cron task for single user
+    const subTask = cron.schedule('59 20 * * 1-5', async () => {
+      slack.dmSubs(app, group, group.ts)
+    }, {
+      timezone: tz
+    })
+
+    // getting uid
+    const sub = usrInfo[0].id
+
+    const subObj = {
+      name: sub,
+      task: subTask
+    }
+
+    subTasks.push(subObj)
+  }
+
+  // adding all of this group's tasks to an entry to be stored in allTasks
   // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
   const entry = {
     group: group.name,
-    eodTask,
-    subscriberTask
+    threadTask,
+    contribTasks,
+    subTasks
   }
 
   // now we can find this entry later if the group needs to be deleted
   allTasks.push(entry)
 
-  console.log(`Group '${group.name}' added to scheduler`)
-  console.log(`# of groups in scheduler: ${allTasks.length}`)
   return 0
 }
 
