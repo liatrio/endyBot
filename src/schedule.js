@@ -75,13 +75,19 @@ async function scheduleCronJob (allTasks, group, app) {
 }
 
 // function to remove all the tasks for a specific group
-function removeTasks (allTasks, groupName) {
+function removeAllTasks (allTasks, groupName) {
   if (allTasks.length !== 0) {
     let i = 0
     for (const entry of allTasks) {
       if (entry.group === groupName) {
-        entry.eodTask.stop()
-        entry.subscriberTask.stop()
+        // loop to stop all contributor tasks
+        for (const singleEod of entry.eodTask) {
+          singleEod.stop()
+        }
+        // loop to stop all subscriber tasks
+        for (const singleSub of entry.subscriberTask) {
+          singleSub.stop()
+        }
         allTasks.splice(i, 1)
         console.log('New list length after deleting: ' + allTasks.length)
         return 1
@@ -90,6 +96,28 @@ function removeTasks (allTasks, groupName) {
     }
   }
   return 0
+}
+
+// function to remove a single subscriber task (for unsubscribe functionality)
+function removeSubscriberTask (allTasks, groupName, subscriber) {
+  if (allTasks.length != 0) {
+    // look for group
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        let i = 0
+        // look for subscribers task
+        for (const single of entry.subscriberTask) {
+          // remove
+          if (single.name === subscriber) {
+            single.stop()
+            entry.subscriberTask.splice(i, 1)
+            break
+          }
+          i += 1
+        }
+      }
+    }
+  }
 }
 
 function convertPostTimeToCron (hour) {
@@ -141,4 +169,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeTasks }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeAllTasks, removeSubscriberTask }
