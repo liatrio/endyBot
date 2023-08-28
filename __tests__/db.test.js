@@ -5,15 +5,6 @@ const mockingoose = require('mockingoose')
 const Group = require('../db-schemas/group')
 const Post = require('../db-schemas/post')
 const db = require('../src/db')
-const { App } = require('@slack/bolt')
-
-// calling this require so I can access the mocked out
-// functions and modify them for individual tests
-const slack = require('../src/slack')
-
-// this will grab the  require above and replace it
-// with the file in the src/__mocks__  folder
-jest.mock('../src/slack')
 
 // i added this to ensure that our tests dont interfere with eachother
 // it resets the DB after each test
@@ -273,39 +264,22 @@ describe('removeSubscriber testing suite', () => {
   })
 })
 
-// Passing the slack module into the deleteGroup function calls is very unconventional...
-// Please refer to the comment sections above the delete case in app.js, and above deleteGroup in db.js for an explanation
-// To avoid having to do this, multiple functions will require some refactoring, or some very minimal logic will need to be added to app.js
 describe('deleteGroup function', () => {
-  const mockApp = new App({})
-  test('testing invalid group names', async () => {
-    mockingoose(Group).toReturn(null, 'findOne')
-    const res = await db.deleteGroup(mockApp, 'Test Group', 'UID123', slack)
-    expect(res).toEqual('No group exists with name *Test Group*')
-  })
-
   test('error catching', async () => {
-    const testGroup = 'testGroup'
-    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
     mockingoose(Group).toReturn(console.error('error'), 'deleteOne')
-    const res = await db.deleteGroup(mockApp, 'error', 'UID123', slack)
+    const res = await db.deleteGroup('error')
     expect(res).toEqual("Error while deleting error: Cannot read properties of undefined (reading 'deletedCount')")
   })
 
   test('testing valid group names', async () => {
-    const testGroup = 'testGroup'
-    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
     mockingoose(Group).toReturn({ deletedCount: 1 }, 'deleteOne')
-    slack.notifySubsAboutGroupDeletion.mockResolvedValue(0)
-    const res = await db.deleteGroup(mockApp, 'testGroup', 'UID123', slack)
+    const res = await db.deleteGroup('testGroup')
     expect(res).toEqual('*testGroup* was removed successfully')
   })
 
   test('testing valid group names', async () => {
-    const testGroup = 'testGroup'
-    mockingoose(Group).toReturn({ name: testGroup }, 'findOne')
     mockingoose(Group).toReturn({ deletedCount: 0 }, 'deleteOne')
-    const res = await db.deleteGroup(mockApp, 'testGroup', 'UID123', slack)
-    expect(res).toEqual('*testGroup* was not found')
+    const res = await db.deleteGroup('testGroup')
+    expect(res).toEqual('*testGroup* was not deleted')
   })
 })
