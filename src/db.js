@@ -103,31 +103,34 @@ async function describeGroup (groupname) {
     return `No group exists with name *${groupname}*`
   }
 
-  // Set up string to be returned and printed from app.js
-  let stringedResult = ''
+  // Examine group object and set up string to be returned
+  try {
+    // Set up string to be returned and printed from app.js
+    let stringedResult = `Here's all the information for *${groupname}*\n\n`
 
-  stringedResult += `Here's all the information for *${groupname}*\n\n`
+    // Display all contributors of the group
+    stringedResult += '*Contributors*: '
+    for (const user of group.contributors) {
+      stringedResult += `<@${user}>  `
+    }
 
-  // Display all contributors of the group
-  stringedResult += '*Contributors*: '
-  for (const user of group.contributors) {
-    stringedResult += `<@${user}>  `
+    // Display all subscribers of the group
+    stringedResult += '\n\n*Subscribers*: '
+    for (const user of group.subscribers) {
+      stringedResult += `<@${user}>  `
+    }
+
+    // Display the channel the group is tied to
+    stringedResult += `\n\n*Channel*: <#${group.channel}>\n`
+
+    // Display the time that the EOD jobs run
+    // TODO: Refactor this once we have timezones done... or just leave as PST
+    stringedResult += `\n*EOD Time*: ${group.postTime}:00 PST\n`
+
+    return stringedResult
+  } catch (error) {
+    return `Error while describing group ${groupname}: ${error.message}`
   }
-
-  // Display all subscribers of the group
-  stringedResult += '\n\n*Subscribers*: '
-  for (const user of group.subscribers) {
-    stringedResult += `<@${user}>  `
-  }
-
-  // Display the channel the group is tied to
-  stringedResult += `\n\n*Channel*: <#${group.channel}>\n`
-
-  // Display the time that the EOD jobs run
-  // ATTENTION: Refactor this once we have timezones done... or just leave as PST
-  stringedResult += `\n*EOD Time*: ${group.postTime}:00 PST\n`
-
-  return stringedResult
 }
 
 module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup }
