@@ -131,12 +131,17 @@ describe('slack.js testing suite', () => {
 
     test('Successfully sent conributor a DM', async () => {
       const group = {
-        name: 'Test',
-        contributors: ['UID123', 'UID456']
+        name: 'test'
       }
-      const user = group.contributors[0]
-      const result = await slack.dmUsers(mockApp, group, user)
-      expect(result).toBe(0)
+
+      const expected = {
+        channel: 'C123ABC456',
+        ts: '1503435956.000247',
+        uid: 'U1234556'
+      }
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const result = await slack.dmUsers(mockApp, group.name, expected.uid)
+      expect(result).toStrictEqual(expected)
     })
 
     test('Could not sent contributor a DM', async () => {
@@ -338,6 +343,27 @@ describe('slack.js testing suite', () => {
       const res = await slack.postEODResponse(mockApp, view, '1234')
 
       expect(res).toEqual(expectedRes)
+    })
+  })
+
+  describe('updateEodReminder() tests', () => {
+    const mockApp = new App({})
+
+    test('check that the message is successfully deleted', async () => {
+      const expected = {
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1401383885.000061'
+      }
+
+      mockApp.client.chat.delete = jest.fn().mockResolvedValue({
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1401383885.000061'
+      })
+
+      const res = await slack.eodDmUpdateDelete(mockApp, expected.channel, expected.ts)
+      expect(res).toStrictEqual(expected)
     })
   })
 

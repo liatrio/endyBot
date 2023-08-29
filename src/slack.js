@@ -33,8 +33,13 @@ async function createPost (app, group) {
  * @returns 0 on success and -1 if there are no contributors
  */
 async function dmUsers (app, group, user) {
+  if (!user) {
+    console.log('null user')
+    return user
+  }
+  let message
   try {
-    await app.client.chat.postMessage({
+    const res = await app.client.chat.postMessage({
       channel: user,
       blocks: [
         {
@@ -63,11 +68,12 @@ async function dmUsers (app, group, user) {
         }
       ]
     })
-    return 0
+    message = { channel: res.channel, ts: res.ts, uid: user }
   } catch (error) {
     console.error('something happened while sending dm: ', error)
-    return -1
+    return null
   }
+  return message
 }
 
 /**
@@ -91,6 +97,45 @@ async function validateInput (group, threadID) {
   }
   return 0
 }
+//   for (const user of group.contributors) {
+//     try {
+//       app.client.chat.postMessage({
+//         channel: user,
+//         blocks: [
+//           {
+//             type: 'section',
+//             text: {
+//               type: 'mrkdwn',
+//               text: `It's time to write your EOD posts for *${group.name}!*`
+//             }
+//           },
+//           {
+//             type: 'divider'
+//           },
+//           {
+//             type: 'actions',
+//             elements: [
+//               {
+//                 type: 'button',
+//                 text: {
+//                   type: 'plain_text',
+//                   text: 'Begin EOD Post',
+//                   emoji: true
+//                 },
+//                 action_id: 'write_eod'
+//               }
+//             ]
+//           }
+//         ]
+//       })
+//       console.log('message sent')
+//     } catch (error) {
+//       console.error('something happened while sending dm: ', error)
+//       continue
+//     }
+//   }
+//   return 0
+// }
 
 /**
  * sends a message of EOD link to subscribers stored in our db
@@ -314,4 +359,43 @@ async function getUserList (app) {
   return usrList.members
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, getUserList }
+async function eodDmUpdateDelete (app, user, ts) {
+  try {
+    const res = await app.client.chat.delete({
+      channel: user,
+      ts
+    })
+
+    if (res.ok) {
+      return res
+    } else {
+      return null
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function eodDmUpdatePost (app, user) {
+  try {
+    const message = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*thank you for writing your EOD!*'
+          }
+        }
+      ]
+    })
+    if (!message.ok) {
+      return null
+    }
+    return message
+  } catch (error) {
+    console.error(error)
+  }
+}
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList }

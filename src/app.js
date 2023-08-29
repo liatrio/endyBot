@@ -5,7 +5,6 @@ const schedule = require('./schedule')
 const helpers = require('./helpers')
 const appHelper = require('./app-helper')
 require('dotenv').config()
-
 // setting up app
 const app = new App({
   token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
@@ -24,6 +23,7 @@ if (process.env.DEV == 1) {
 
 // list of all cron tasks. This will be needed to stop tasks upon group deletion
 const allTasks = []
+const eodSent = []
 
 // upon startup, setup a cron job for all groups in the database
 schedule.startCronJobs(allTasks, app)
@@ -98,7 +98,16 @@ app.view('create-group-view', async ({ view, ack }) => {
 // listen for response from EOD-response modal
 app.view('EOD-response', async ({ body, ack }) => {
   await ack()
-
+  for (let i = 0; i < eodSent.length; i++) {
+    console.log('user id: ', eodSent[i].id, '\n', 'body id: ', body.user.id)
+    if (eodSent[i].id === body.user.id) {
+      slack.eodDmUpdateDelete(app, eodSent[i].channel, eodSent[i].ts)
+      slack.eodDmUpdatePost(app, eodSent[i].channel)
+    } else {
+      console.log(eodSent)
+    }
+  }
+  // slack.updateEodReminder(app, user, bot)
   // handle response from EOD modal here
   slack.postEODResponse(app, body.view, body.user.id)
 })
