@@ -7,7 +7,7 @@ module.exports = {
   testPathIgnorePatterns: ['./src/app.js'],
   coverageThreshold: {
     global: {
-      lines: 75
+      lines: 90
     }
   }
 }

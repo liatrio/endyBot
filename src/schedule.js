@@ -56,7 +56,7 @@ async function scheduleCronJob (allTasks, group, app) {
     const update = { ts }
     await Group.findOneAndUpdate(filter, update)
   }, {
-    timezone: 'America/Atikokan' // EST
+    timezone: 'America/New_York' // EST
   })
 
   // Scheduling the contriutor reminders

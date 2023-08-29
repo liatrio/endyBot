@@ -3,6 +3,7 @@ const slack = require('./slack')
 const database = require('./db')
 const schedule = require('./schedule')
 const helpers = require('./helpers')
+const appHelper = require('./app-helper')
 require('dotenv').config()
 
 // setting up app
@@ -35,7 +36,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
   // Might want to flush this out to a full parse command similar to groupyBot but for now to access delete I need just the delete keyword
   const parsed = command.text.split(' ')
   const cmd = parsed[0]
-  const group = parsed[1]
+  const groupName = parsed[1]
 
   switch (cmd) {
     case 'create':{
@@ -43,17 +44,25 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       slack.sendCreateModal(app, command.trigger_id)
       break
     }
+    case 'subscribe': {
+      const res = await database.addSubscriber(groupName, command.user_id)
+      respond(res)
+      break
+    }
+    case 'unsubscribe': {
+      const res = await database.removeSubscriber(groupName, command.user_id)
+      schedule.removeSubscriberTask(allTasks, groupName, command.user_id)
+      respond(res)
+      break
+    }
     case 'delete':{
-      // calls all necessary functions to delete a group
-      // const groupName = helpers.parseDeleteCommand(command.text)
-      schedule.removeTasks(allTasks, cmd)
-      const res = await database.deleteGroup(group)
+      const res = await appHelper.handleGroupDelete(app, allTasks, groupName, command.user_id)
       respond(res)
       break
     }
     case 'list': {
-      const data = await database.listGroups()
-      respond(`${data}`)
+      const data = await database.listGroups(command.user_id)
+      respond(data)
       break
     }
     case 'help': {

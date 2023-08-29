@@ -398,3 +398,27 @@ describe('slack.js testing suite', () => {
     })
   })
 })
+
+describe('notifySubsAboutGroupDeletion testing suite', () => {
+  let mockApp
+
+  beforeEach(() => {
+    mockApp = new App({})
+  })
+
+  test('Successfully sent subscribers a DM', async () => {
+    const group = {
+      subscribers: ['UID123', 'UID456']
+    }
+    const result = await slack.notifySubsAboutGroupDeletion(mockApp, group, 'UID123')
+    expect(result).toBe(0)
+  })
+
+  test('No subscribers in group error', async () => {
+    const group = {
+      subscribers: []
+    }
+    const result = await slack.notifySubsAboutGroupDeletion(mockApp, group, 'UID123')
+    expect(result).toBe(1)
+  })
+})
