@@ -32,49 +32,42 @@ async function createPost (app, group) {
  * @param {*} group
  * @returns 0 on success and -1 if there are no contributors
  */
-async function dmUsers (app, group) {
-  if (!group.contributors.length) {
-    console.log('no contributors in the group!')
+async function dmUsers (app, group, user) {
+  try {
+    await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `It's time to write your EOD posts for *${group.name}!*`
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Begin EOD Post',
+                emoji: true
+              },
+              action_id: 'write_eod'
+            }
+          ]
+        }
+      ]
+    })
+    return 0
+  } catch (error) {
+    console.error('something happened while sending dm: ', error)
     return -1
   }
-  for (const user of group.contributors) {
-    try {
-      app.client.chat.postMessage({
-        channel: user,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `It's time to write your EOD posts for *${group.name}!*`
-            }
-          },
-          {
-            type: 'divider'
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: {
-                  type: 'plain_text',
-                  text: 'Begin EOD Post',
-                  emoji: true
-                },
-                action_id: 'write_eod'
-              }
-            ]
-          }
-        ]
-      })
-      console.log('message sent')
-    } catch (error) {
-      console.error('something happened while sending dm: ', error)
-      continue
-    }
-  }
-  return 0
 }
 
 /**
@@ -106,42 +99,38 @@ async function validateInput (group, threadID) {
  * @param {*} threadID
  * @returns variable check which should be 0 on success and 1,2, or 3 depending on the error
  */
-async function dmSubs (app, group, threadID) {
+async function dmSubs (app, group, sub, threadID) {
   const check = validateInput(group, threadID)
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
   const link = `${process.env.ORG}${group.channel}/p${threadID}`
 
-  for (const sub of group.subscribers) {
-    try {
-      app.client.chat.postMessage({
-        channel: sub,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `Hey there, here's ${group.name}'s EOD thread`
-            }
-          },
-          {
-            type: 'divider'
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `${link}`
-            }
-          }]
-      })
-    } catch (error) {
-      console.log('')
-      console.error(`something went wrong trying to send the message: \n \
+  try {
+    app.client.chat.postMessage({
+      channel: sub,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `Hey there, here's ${group.name}'s EOD thread`
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `${link}`
+          }
+        }]
+    })
+  } catch (error) {
+    console.error(`something went wrong trying to send the message: \n \
       sub: ${group.sub}\n \
       group: ${group.name}\n \
       error: `, error)
-      continue
-    }
   }
   return check
 }
@@ -270,4 +259,23 @@ async function postEODResponse (app, view, uid) {
   return res.message.blocks
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs }
+/**
+ * Uses the Slack API to get a list of all users in the workspace, as well as information about them.
+ *
+ * @param {JSON} app
+ * @returns The list of all users in the current slack workspace.
+ * check slack docs for object description
+ */
+async function getUserList (app) {
+  const usrList = await app.client.users.list()
+
+  if (usrList.ok != true) {
+    // error in API call
+    console.log(`Unable to get user list: ${usrList.error}`)
+    return usrList.error
+  }
+
+  return usrList.members
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, getUserList }

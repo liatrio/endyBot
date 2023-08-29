@@ -131,18 +131,25 @@ describe('slack.js testing suite', () => {
 
     test('Successfully sent conributor a DM', async () => {
       const group = {
+        name: 'Test',
         contributors: ['UID123', 'UID456']
       }
-      const result = await slack.dmUsers(mockApp, group)
+      const user = group.contributors[0]
+      const result = await slack.dmUsers(mockApp, group, user)
       expect(result).toBe(0)
     })
 
-    test('No contributors in group error', async () => {
+    test('Could not sent contributor a DM', async () => {
       const group = {
+        name: 'Test',
         contributors: []
       }
-      const result = await slack.dmUsers(mockApp, group)
-      expect(result).toBe(-1)
+
+      mockApp.client.chat.postMessage.mockRejectedValue()
+
+      const user = 'UID123'
+      const result = await slack.dmUsers(mockApp, group, user)
+      expect(result).toEqual(-1)
     })
   })
 
@@ -158,8 +165,9 @@ describe('slack.js testing suite', () => {
         subscribers: ['UID123', 'UID456'],
         channel: '45678'
       }
+      const sub = group.subscribers[0]
       const ts = '1234.5678'
-      const result = await slack.dmSubs(mockApp, group, ts)
+      const result = await slack.dmSubs(mockApp, group, sub, ts)
       expect(result).toBe(0)
     })
 
@@ -167,8 +175,9 @@ describe('slack.js testing suite', () => {
       const group = {
         subscribers: []
       }
+      const sub = ''
       const ts = '1234.5678'
-      const result = await slack.dmSubs(mockApp, group, ts)
+      const result = await slack.dmSubs(mockApp, group, sub, ts)
       expect(result).toBe(1)
     })
 
@@ -329,6 +338,63 @@ describe('slack.js testing suite', () => {
       const res = await slack.postEODResponse(mockApp, view, '1234')
 
       expect(res).toEqual(expectedRes)
+    })
+  })
+
+  describe('getUserList tests', () => {
+    const mockApp = new App({})
+
+    test('Successful API call', async () => {
+      // mocking api response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: true,
+        members: [
+          {
+            id: 'UID1234',
+            name: 'johnd',
+            real_name: 'John Doe',
+            tz: 'America/Los_Angeles'
+          },
+          {
+            id: 'UID5678',
+            name: 'johnm',
+            real_name: 'John Moe',
+            tz: 'America/Los_Angeles'
+          }
+        ]
+      })
+
+      // defining expected result and running test
+      const expectedRes = [
+        {
+          id: 'UID1234',
+          name: 'johnd',
+          real_name: 'John Doe',
+          tz: 'America/Los_Angeles'
+        },
+        {
+          id: 'UID5678',
+          name: 'johnm',
+          real_name: 'John Moe',
+          tz: 'America/Los_Angeles'
+        }
+      ]
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(expectedRes)
+    })
+
+    test('Unsuccessful API call', async () => {
+      // mocking failed API response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: false,
+        error: Error('Unable to get user list')
+      })
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(Error('Unable to get user list'))
     })
   })
 })
