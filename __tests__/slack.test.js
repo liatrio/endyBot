@@ -353,6 +353,6 @@ describe('notifySubsAboutGroupDeletion testing suite', () => {
       subscribers: []
     }
     const result = await slack.notifySubsAboutGroupDeletion(mockApp, group, 'UID123')
-    expect(result).toBeNull()
+    expect(result).toBe(1)
   })
 })

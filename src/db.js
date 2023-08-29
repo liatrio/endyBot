@@ -53,10 +53,16 @@ async function deleteGroup (groupName) {
  * @returns String that contains the entire list print
  */
 async function listGroups (userID) {
-  // Gather all groups from the database
-  const groups = await Group.find({})
-  if (groups.length == 0) {
-    return 'No groups to be listed'
+  // declare here so it's recognized in every try block
+  let groups
+  try {
+    // Gather all groups from the database
+    groups = await Group.find({})
+    if (groups.length == 0) {
+      return 'No groups to be listed'
+    }
+  } catch (error) {
+    return `Error while gathering groups from database: ${error.message}`
   }
 
   // Set up arrays to hold the relevant info for printing
@@ -147,15 +153,15 @@ async function getGroup (groupName, groupID) {
  * @returns String that denotes either a success or failure message
  */
 async function addSubscriber (groupname, userID) {
-  // Obtain group object that points to the database
-  const group = await getGroup(groupname, undefined)
-
-  // In case the group doesn't exist, notify the user
-  if (group === null) {
-    return `No group exists with name *${groupname}*`
-  }
-
   try {
+    // Obtain group object that points to the database
+    const group = await getGroup(groupname, undefined)
+
+    // In case the group doesn't exist, notify the user
+    if (group === null) {
+      return `No group exists with name *${groupname}*`
+    }
+
     // If the user is already subscribed to the group, notify them
     if (group.subscribers.includes(userID)) {
       return `You are already subscribed to *${groupname}*`
@@ -163,7 +169,7 @@ async function addSubscriber (groupname, userID) {
 
     // Add the userID to the subscriber list and save the entry into the database
     group.subscribers.push(userID)
-    group.save()
+    await group.save()
 
     // Notify user upon success
     return `You are now subscribed to *${groupname}*!`
@@ -181,20 +187,20 @@ async function addSubscriber (groupname, userID) {
  * @returns String that denotes either a success or failure message
  */
 async function removeSubscriber (groupname, userID) {
-  // Obtain group object thayt points to the database
-  const group = await getGroup(groupname, undefined)
-
-  // In case the group doesn't exist, notify the user
-  if (group === null) {
-    return `No group exists with name *${groupname}*`
-  }
-
   try {
+    // Obtain group object thayt points to the database
+    const group = await getGroup(groupname, undefined)
+
+    // In case the group doesn't exist, notify the user
+    if (group === null) {
+      return `No group exists with name *${groupname}*`
+    }
+
     // As long as the user is subscribed to the group, unsubscribe them (remove ID from subscriber list)
     if (group.subscribers.includes(userID)) {
       // Set the subscriber list equal to itself, but without the userID in it, and save the entry into the database
       group.subscribers = group.subscribers.filter(item => item !== userID)
-      group.save()
+      await group.save()
 
       // Notify user upon success
       return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`

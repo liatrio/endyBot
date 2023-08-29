@@ -281,7 +281,7 @@ async function notifySubsAboutGroupDeletion (app, group, userID) {
   // The passed in group has already been verified by handleGroupDeletion in app-helper
   if (group.subscribers.length == 0) {
     console.log('No subscribers in the group')
-    return null
+    return 1
   }
   // Send a message to each subscriber notifying them what group was deleted, and which user deleted it
   for (const user of group.subscribers) {

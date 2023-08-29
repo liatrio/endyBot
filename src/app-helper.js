@@ -5,11 +5,11 @@ const schedule = require('./schedule')
 // Stop tasks for a group, delete the group, and notify the subscribers of the group
 // This function is here to support app.js with logic
 async function handleGroupDelete (app, allTasks, groupName, userID) {
-  const group = await database.getGroup(groupName, undefined)
-  if (group === null) {
-    return `No group exists with name *${groupName}*`
-  }
   try {
+    const group = await database.getGroup(groupName, undefined)
+    if (group === null) {
+      return `No group exists with name *${groupName}*`
+    }
     // removeTasks is not async so no need to await
     schedule.removeTasks(allTasks, groupName)
     const res = await database.deleteGroup(groupName)
