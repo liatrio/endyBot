@@ -125,7 +125,7 @@ async function describeGroup (groupname) {
 
     // Display the time that the EOD jobs run
     // TODO: Refactor this once we have timezones done... or just leave as PST
-    stringedResult += `\n*EOD Time*: ${group.postTime}:00 PST\n`
+    stringedResult += `\n*EOD Time*: ${group.postTime}:00 EST\n`
 
     return stringedResult
   } catch (error) {
