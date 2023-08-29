@@ -27,7 +27,7 @@ describe('handleGroupDelete testing suite', () => {
   test('Pass valid group name in', async () => {
     const allTasks = []
     db.getGroup.mockResolvedValue({})
-    schedule.removeTasks.mockResolvedValue(0)
+    schedule.removeAllTasks.mockResolvedValue(0)
     db.deleteGroup.mockResolvedValue('*group* was removed successfully')
     slack.notifySubsAboutGroupDeletion.mockResolvedValue(0)
     const res = await appHelper.handleGroupDelete(app, allTasks, 'group', 'UID123')

@@ -4,5 +4,5 @@ module.exports = {
   startCronJobs: jest.fn(() => Promise.resolve()),
   scheduleCronJob: jest.fn(() => Promise.resolve()),
   convertPostTimeToCron: jest.fn(),
-  removeTasks: jest.fn()
+  removeAllTasks: jest.fn()
 }

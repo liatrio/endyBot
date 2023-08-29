@@ -11,7 +11,7 @@ async function handleGroupDelete (app, allTasks, groupName, userID) {
       return `No group exists with name *${groupName}*`
     }
     // removeTasks is not async so no need to await
-    schedule.removeTasks(allTasks, groupName)
+    schedule.removeAllTasks(allTasks, groupName)
     const res = await database.deleteGroup(groupName)
     if (res === `*${groupName}* was removed successfully`) {
       // Passing in the userID of the delete function caller so the function can print which user deleted the group

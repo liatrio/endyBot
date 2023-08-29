@@ -51,6 +51,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
     }
     case 'unsubscribe': {
       const res = await database.removeSubscriber(groupName, command.user_id)
+      schedule.removeSubscriberTask(allTasks, groupName, command.user_id)
       respond(res)
       break
     }

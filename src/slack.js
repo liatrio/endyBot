@@ -17,7 +17,7 @@ async function createPost (app, group) {
     const groupname = group.name
     const res = await app.client.chat.postMessage({
       channel: cID,
-      text: `${groupname} EOD :thread:`
+      text: `*${groupname}* EOD :thread:`
     })
     return res.ts
   } catch (error) {
