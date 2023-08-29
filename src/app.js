@@ -32,11 +32,11 @@ schedule.startCronJobs(allTasks, app)
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
-  // TECHNICAL DEBT //
-  // Might want to flush this out to a full parse command similar to groupyBot but for now to access delete I need just the delete keyword
+  // parses the command now to include group names with spaces
   const parsed = command.text.split(' ')
   const cmd = parsed[0]
-  const groupName = parsed[1]
+  const groupNameArray = parsed.shift()
+  const groupName = groupNameArray.join(' ')
 
   switch (cmd) {
     case 'create':{
