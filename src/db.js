@@ -160,7 +160,7 @@ async function describeGroup (groupname) {
     if (group === null) {
       return `No group exists with name *${groupname}*`
     }
-    
+
     // Examine group object and set up string to be returned
     // Set up string to be returned and printed from app.js
     let stringedResult = `Here's all the information for *${groupname}*\n\n`
@@ -201,6 +201,13 @@ async function describeGroup (groupname) {
 async function addSubscriber (groupname, userID) {
   try {
     // Obtain group object that points to the database
+    const group = await getGroup(groupname, undefined)
+
+    // In case the group doesn't exist, notify the user
+    if (group === null) {
+      return `No group exists with name *${groupname}*`
+    }
+
     // If the user is already subscribed to the group, notify them
     if (group.subscribers.includes(userID)) {
       return `You are already subscribed to *${groupname}*`

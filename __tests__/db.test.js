@@ -296,7 +296,7 @@ describe('describeGroup testing suite', () => {
     }
     mockingoose(Group).toReturn(group, 'findOne')
     const result = await db.describeGroup('Group 1')
-    expect(result).toBe('Here\'s all the information for *Group 1*\n\n*Contributors*: <@UID123>  \n\n*Subscribers*: <@SID123>  \n\n*Channel*: <#test-channel>\n\n*EOD Time*: 14:00 PST\n')
+    expect(result).toBe('Here\'s all the information for *Group 1*\n\n*Contributors*: <@UID123>  \n\n*Subscribers*: <@SID123>  \n\n*Channel*: <#test-channel>\n\n*EOD Time*: 14:00 EST\n')
   })
 
   test('Describe nonexistent group', async () => {

@@ -66,7 +66,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       break
     }
     case 'describe': {
-      const data = await database.describeGroup(group)
+      const data = await database.describeGroup(groupName)
       respond(data)
       break
     }
