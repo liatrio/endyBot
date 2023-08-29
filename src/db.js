@@ -95,16 +95,16 @@ async function getGroup (groupName, groupID) {
  * @returns String
  */
 async function describeGroup (groupname) {
-  // Obtain group object thayt points to the database
-  const group = await getGroup(groupname, undefined)
-
-  // In case the group doesn't exist, notify the user
-  if (group === null) {
-    return `No group exists with name *${groupname}*`
-  }
-
-  // Examine group object and set up string to be returned
   try {
+    // Obtain group object thayt points to the database
+    const group = await getGroup(groupname, undefined)
+
+    // In case the group doesn't exist, notify the user
+    if (group === null) {
+      return `No group exists with name *${groupname}*`
+    }
+
+    // Examine group object and set up string to be returned
     // Set up string to be returned and printed from app.js
     let stringedResult = `Here's all the information for *${groupname}*\n\n`
 
