@@ -21,9 +21,9 @@ if (process.env.DEV == 1) {
   slashcommand = '/endybot-dev'
 }
 
+const eodSent = []
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
-
   switch (command.text) {
     case 'create':{
       // open group create modal
@@ -61,10 +61,17 @@ app.view('create-group-view', async ({ view, ack }) => {
 })
 
 // listen for response from EOD-response modal
-app.view('EOD-response', async ({ view, body, ack }) => {
+app.view('EOD-response', async ({ body, ack }) => {
   await ack()
-  // console.log(body)
-  slack.updateEodReminder(app, body)
+  for (let i = 0; i < eodSent.length; i++) {
+    console.log('user id: ', eodSent[i].id, '\n', 'body id: ', body.user.id)
+    if (eodSent[i].id === body.user.id) {
+      slack.updateEODModal(app, eodSent[i].channel, eodSent[i].ts)
+    } else {
+      console.log(eodSent)
+    }
+  }
+  // slack.updateEodReminder(app, user, bot)
   // handle response from EOD modal here
 })
 
@@ -86,8 +93,6 @@ app.action('add_blockers', async ({ ack, body }) => {
 app.action('write_eod', async ({ ack, body }) => {
   await ack()
 
-  console.log(body.message.ts)
-  console.log(body.container.message_ts)
   // parse the group name from the message
   const groupName = helpers.groupNameFromMessage(body.message.text)
 

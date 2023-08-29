@@ -207,4 +207,25 @@ describe('slack.js testing suite', () => {
       expect(res).toEqual(-1)
     })
   })
+
+  describe('updateEodReminder() tests', () => {
+    let mockApp
+    beforeEach(() => {
+      mockApp = new App()
+    })
+
+    test('check that the message is successfully deleted', async () => {
+      const mockRes = {
+        ok: true,
+        channel: 'D05MU5Y46Q4',
+        ts: '1693269336.239009'
+      }
+
+      mockApp.client.chat.delete = jest.fn().mockResolvedValue({ channel: mockRes.channel, ts: mockRes.ts })
+      const res = await slack.updateEODModal(mockApp, mockRes.channel, mockRes.ts)
+      console.log(res.del)
+      expect(res.del.ts).tobe(mockRes.ts)
+      expect(res[0].channel).tobe(mockRes.channel)
+    })
+  })
 })

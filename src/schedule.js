@@ -27,7 +27,9 @@ async function scheduleCronJob (groupID, app) {
     slack.createPost(app, group)
 
     // Send the contributors their EOD prompt
-    slack.dmUsers(app, group)
+    const reminderSent = slack.dmUsers(app, group)
+    const eodSent = reminderSent
+    console.log(eodSent)
   }, {
     timezone: 'America/Los_Angeles'
   })

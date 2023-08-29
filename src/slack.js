@@ -30,49 +30,51 @@ async function createPost (app, group) {
  * @param {*} group
  * @returns 0 on success and -1 if there are no contributors
  */
-async function dmUsers (app, group) {
-  if (!group.contributors.length) {
-    console.log('no contributors in the group!')
-    return -1
+async function dmUsers (app, user) {
+  if (!user) {
+    console.log('null user')
+    return user
   }
-  for (const user of group.contributors) {
-    try {
-      app.client.chat.postMessage({
-        channel: user,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `It's time to write your EOD posts for *${group.name}!*`
-            }
-          },
-          {
-            type: 'divider'
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: {
-                  type: 'plain_text',
-                  text: 'Begin EOD Post',
-                  emoji: true
-                },
-                action_id: 'write_eod'
-              }
-            ]
+  let message
+  try {
+    const res = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `It's time to write your EOD posts for *${user}!*`
           }
-        ]
-      })
-      console.log('message sent')
-    } catch (error) {
-      console.error('something happened while sending dm: ', error)
-      continue
-    }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Begin EOD Post',
+                emoji: true
+              },
+              action_id: 'write_eod'
+            }
+          ]
+        }
+      ]
+    })
+    message = { channel: res.channel, ts: res.ts, id: user }
+    // idsAndTs.push(message)
+    console.log('message sent')
+  } catch (error) {
+    console.error('something happened while sending dm: ', error)
+    // continue
   }
-  return 0
+  // }
+  return message
 }
 
 /**
@@ -238,31 +240,39 @@ function updateEODModal (app, body, toAdd) {
   return targetView
 }
 
-async function updateEodReminder (app, body) {
+async function updateEodReminder (app, user, ts) {
   try {
-    const convo = await app.client.conversations.history({
-      channel: `${body.user.id}`,
-      oldest: `${body.message.ts}`,
-      inclusive: true,
-      count: 1
+    const del = await app.client.chat.delete({
+      channel: user,
+      ts
     })
 
-    if (!convo.messages.length) {
-      console.log('empty message')
-      return convo.messages
+    if (del.ok) {
+      console.log(del)
+    } else {
+      return del
     }
 
-    const message = convo.messages[2].blocks
-    const removed = message.filter(block => block.type !== 'actions')
-    const res = await app.client.chat.update({
-      channel: body.user.id,
-      timestamp: body.message.ts,
-      message: removed
+    const message = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*thank you for writing your EOD!*'
+          }
+        }
+      ]
     })
 
-    if (res.ok) {
-      return res
+    if (message.ok) {
+      console.log(message)
+    } else {
+      return message
     }
+    const responses = { del, message }
+    return responses
   } catch (error) {
     console.error(error)
   }
