@@ -149,12 +149,11 @@ describe('slack.js testing suite', () => {
         name: 'Test',
         contributors: []
       }
-
       mockApp.client.chat.postMessage.mockRejectedValue()
 
       const user = 'UID123'
       const result = await slack.dmUsers(mockApp, group, user)
-      expect(result).toEqual(-1)
+      expect(result).toEqual(null)
     })
   })
 
@@ -346,7 +345,7 @@ describe('slack.js testing suite', () => {
     })
   })
 
-  describe('updateEodReminder() tests', () => {
+  describe('eodDmUpdateDelete() tests', () => {
     const mockApp = new App({})
 
     test('check that the message is successfully deleted', async () => {
@@ -364,6 +363,59 @@ describe('slack.js testing suite', () => {
 
       const res = await slack.eodDmUpdateDelete(mockApp, expected.channel, expected.ts)
       expect(res).toStrictEqual(expected)
+    })
+
+    test('failed deletion of prev message', async () => {
+      const expected = {
+        ok: false,
+        channel: '',
+        ts: ''
+      }
+
+      mockApp.client.chat.delete = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdateDelete(mockApp, expected.channel, expected.ts)
+      expect(res).toBe(null)
+    })
+  })
+
+  describe('eodDmUpdatePost() tests', () => {
+    const mockApp = new App({})
+
+    test('test message has been sent successfully', async () => {
+      const expected = {
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1503435956.000247',
+        message: {
+          text: "Here's a message for you",
+          username: 'ecto1',
+          bot_id: 'B123ABC456',
+          attachments: [
+            {
+              text: 'This is an attachment',
+              id: 1,
+              fallback: "This is an attachment's fallback"
+            }
+          ],
+          type: 'message',
+          subtype: 'bot_message',
+          ts: '1503435956.000247'
+        }
+      }
+
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdatePost(mockApp, expected.channel)
+      expect(res).toStrictEqual(expected)
+    })
+
+    test('test a failed postMessage', async () => {
+      const expected = {
+        ok: false,
+        error: 'too_many_attachments'
+      }
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdatePost(mockApp, expected.channel)
+      expect(res).toStrictEqual(null)
     })
   })
 
