@@ -97,45 +97,6 @@ async function validateInput (group, threadID) {
   }
   return 0
 }
-//   for (const user of group.contributors) {
-//     try {
-//       app.client.chat.postMessage({
-//         channel: user,
-//         blocks: [
-//           {
-//             type: 'section',
-//             text: {
-//               type: 'mrkdwn',
-//               text: `It's time to write your EOD posts for *${group.name}!*`
-//             }
-//           },
-//           {
-//             type: 'divider'
-//           },
-//           {
-//             type: 'actions',
-//             elements: [
-//               {
-//                 type: 'button',
-//                 text: {
-//                   type: 'plain_text',
-//                   text: 'Begin EOD Post',
-//                   emoji: true
-//                 },
-//                 action_id: 'write_eod'
-//               }
-//             ]
-//           }
-//         ]
-//       })
-//       console.log('message sent')
-//     } catch (error) {
-//       console.error('something happened while sending dm: ', error)
-//       continue
-//     }
-//   }
-//   return 0
-// }
 
 /**
  * sends a message of EOD link to subscribers stored in our db
@@ -359,6 +320,13 @@ async function getUserList (app) {
   return usrList.members
 }
 
+/**
+ * deletes a direct message for a user
+ * @param {*} app
+ * @param {*} user
+ * @param {*} ts
+ * @returns json response from slack api on success and null on failure
+ */
 async function eodDmUpdateDelete (app, user, ts) {
   try {
     const res = await app.client.chat.delete({
@@ -376,6 +344,12 @@ async function eodDmUpdateDelete (app, user, ts) {
   }
 }
 
+/**
+ * resends a message to the user
+ * @param {*} app
+ * @param {*} user
+ * @returns json response on success and null on failure
+ */
 async function eodDmUpdatePost (app, user) {
   try {
     const message = await app.client.chat.postMessage({
