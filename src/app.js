@@ -99,7 +99,7 @@ app.view('create-group-view', async ({ view, ack }) => {
 app.view('EOD-response', async ({ body, ack }) => {
   await ack()
   appHelper.iterateEodSent(app, eodSent, body)
-  
+
   // handle response from EOD modal here
   slack.postEODResponse(app, body.view, body.user.id)
 })
