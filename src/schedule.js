@@ -57,11 +57,6 @@ async function scheduleCronJob (allTasks, group, app) {
     const filter = { _id: group._id }
     const update = { ts }
     await Group.findOneAndUpdate(filter, update)
-
-    // Send the contributors their EOD prompt
-    // const reminderSent = slack.dmUsers(app, group)
-    // eodSent.push(reminderSent)
-    // console.log(eodSent)
   }, {
     timezone: 'America/New_York' // EST
   })

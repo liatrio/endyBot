@@ -98,15 +98,7 @@ app.view('create-group-view', async ({ view, ack }) => {
 // listen for response from EOD-response modal
 app.view('EOD-response', async ({ body, ack }) => {
   await ack()
-  for (let i = 0; i < eodSent.length; i++) {
-    console.log('user id: ', eodSent[i].id, '\n', 'body id: ', body.user.id)
-    if (eodSent[i].id === body.user.id) {
-      slack.eodDmUpdateDelete(app, eodSent[i].channel, eodSent[i].ts)
-      slack.eodDmUpdatePost(app, eodSent[i].channel)
-    } else {
-      console.log(eodSent)
-    }
-  }
+  appHelper.iterateEodSent(app, eodSent, body)
   // slack.updateEodReminder(app, user, bot)
   // handle response from EOD modal here
   slack.postEODResponse(app, body.view, body.user.id)
