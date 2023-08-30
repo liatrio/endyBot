@@ -4,8 +4,14 @@ const Group = require('../db-schemas/group.js')
 // Put all functions interacting with the database here
 
 // connect to database
-const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
-mongoose.connect(`mongodb://${db}:27017/endybot`).then(
+let connection = 'db:27017/endybot'
+if (process.env.DEV == 0) {
+  const usr = JSON.parse(process.env.DBCREDS).USERNAME
+  const psswrd = JSON.parse(process.env.DBCREDS).PASSWORD
+  connection = `${usr}:${psswrd}@127.0.0.1:27017/endybot`
+}
+
+mongoose.connect(`mongodb://${connection}`).then(
   () => {
     console.log('Successfully connected to db')
   },
