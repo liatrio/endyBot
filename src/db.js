@@ -8,7 +8,7 @@ let connection = 'db:27017/endybot'
 if (process.env.DEV == 0) {
   const usr = JSON.parse(process.env.DBCREDS).USERNAME
   const psswrd = JSON.parse(process.env.DBCREDS).PASSWORD
-  connection = `${usr}:${psswrd}@127.0.0.1:21707/endybot`
+  connection = `${usr}:${psswrd}@127.0.0.1:27017/endybot`
 }
 
 mongoose.connect(`mongodb://${connection}`).then(
