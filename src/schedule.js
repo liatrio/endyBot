@@ -3,6 +3,8 @@ const cron = require('node-cron')
 const slack = require('./slack')
 require('node-cron')
 
+let reminderSent
+const eodSent = []
 // All code for the node-cron scheduler goes here
 
 // called from app.js on app startup. sets up cron jobs for all groups in the database
@@ -78,7 +80,8 @@ async function scheduleCronJob (allTasks, group, app) {
 
     // creating cron task for single user
     const contribTask = cron.schedule(cronTime, async () => {
-      slack.dmUsers(app, group, contrib)
+      reminderSent = slack.dmUsers(app, group, contrib)
+      eodSent.push(reminderSent)
     }, {
       timezone: tz
     })

@@ -25,7 +25,7 @@ async function addToDB (groupJson) {
 
 /**
  * Deletes a group
- * Takes in a String, and returns a String
+* Takes in a String, and returns a String
  *
  * @param {String} groupName
  * @returns String that expresses success or failure
@@ -48,7 +48,7 @@ async function deleteGroup (groupName) {
 /**
  * Takes in the ID of the user who called the list function as a String. Returns a String that is printed from app.js
  * List all group names and how many members they have
- *
+*
  * @param {String} userID
  * @returns String that contains the entire list print
  */

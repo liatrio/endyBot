@@ -33,8 +33,13 @@ async function createPost (app, group) {
  * @returns 0 on success and -1 if there are no contributors
  */
 async function dmUsers (app, group, user) {
+  if (!user) {
+    console.log('null user')
+    return user
+  }
+  let message
   try {
-    await app.client.chat.postMessage({
+    const res = await app.client.chat.postMessage({
       channel: user,
       blocks: [
         {
@@ -63,11 +68,12 @@ async function dmUsers (app, group, user) {
         }
       ]
     })
-    return 0
+    message = { channel: res.channel, ts: res.ts, uid: user }
   } catch (error) {
     console.error('something happened while sending dm: ', error)
-    return -1
+    return null
   }
+  return message
 }
 
 /**
@@ -314,4 +320,56 @@ async function getUserList (app) {
   return usrList.members
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, getUserList }
+/**
+ * deletes a direct message for a user
+ * @param {*} app
+ * @param {*} user
+ * @param {*} ts
+ * @returns json response from slack api on success and null on failure
+ */
+async function eodDmUpdateDelete (app, user, ts) {
+  try {
+    const res = await app.client.chat.delete({
+      channel: user,
+      ts
+    })
+
+    if (res.ok) {
+      return res
+    } else {
+      return null
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+/**
+ * resends a message to the user
+ * @param {*} app
+ * @param {*} user
+ * @returns json response on success and null on failure
+ */
+async function eodDmUpdatePost (app, user) {
+  try {
+    const message = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*thank you for writing your EOD!*'
+          }
+        }
+      ]
+    })
+    if (!message.ok) {
+      return null
+    }
+    return message
+  } catch (error) {
+    console.error(error)
+  }
+}
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList }
