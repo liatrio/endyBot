@@ -90,7 +90,7 @@ const groupCreate = {
       },
       label: {
         type: 'plain_text',
-        text: 'Time of day to remind contributors to make EOD post (their time)',
+        text: 'Time of day to post EOD thread (EST). The contributors will receive their EOD prompt at the selected time in their own timezone.',
         emoji: true
       },
       block_id: 'create_time'
