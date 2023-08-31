@@ -66,3 +66,30 @@ describe('handleGroupDelete testing suite', () => {
     expect(res).toBe('*group* was removed successfully')
   })
 })
+
+describe('iterateEodSent() tests', () => {
+  const mockApp = new App({})
+  test('successful iteration', async () => {
+    const data = [
+      { id: 'u1234', channel: 'c1234', ts: '1234' }
+    ]
+    const body = {
+      user: {
+        id: 'u1234'
+      }
+    }
+    const res = await appHelper.iterateEodSent(mockApp, data, body)
+    expect(res).toBe(data)
+  })
+
+  test('unsuccessful iteration', async () => {
+    const data = []
+    const body = {
+      user: {
+        id: 'u1234'
+      }
+    }
+    const res = await appHelper.iterateEodSent(mockApp, data, body)
+    expect(res).toBe(null)
+  })
+})

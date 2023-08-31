@@ -4,8 +4,14 @@ const Group = require('../db-schemas/group.js')
 // Put all functions interacting with the database here
 
 // connect to database
-const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
-mongoose.connect(`mongodb://${db}:27017/endybot`).then(
+let connection = 'db:27017/endybot'
+if (process.env.DEV == 0) {
+  const usr = JSON.parse(process.env.DBCREDS).USERNAME
+  const psswrd = JSON.parse(process.env.DBCREDS).PASSWORD
+  connection = `${usr}:${psswrd}@127.0.0.1:27017/endybot`
+}
+
+mongoose.connect(`mongodb://${connection}`).then(
   () => {
     console.log('Successfully connected to db')
   },
@@ -25,7 +31,7 @@ async function addToDB (groupJson) {
 
 /**
  * Deletes a group
- * Takes in a String, and returns a String
+* Takes in a String, and returns a String
  *
  * @param {String} groupName
  * @returns String that expresses success or failure
@@ -48,7 +54,7 @@ async function deleteGroup (groupName) {
 /**
  * Takes in the ID of the user who called the list function as a String. Returns a String that is printed from app.js
  * List all group names and how many members they have
- *
+*
  * @param {String} userID
  * @returns String that contains the entire list print
  */

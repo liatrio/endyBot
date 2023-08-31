@@ -56,4 +56,19 @@ async function handleGroupDelete (app, allTasks, groupName, userID) {
   }
 }
 
-module.exports = { commandParse, handleGroupDelete }
+async function iterateEodSent (app, eodSent, body) {
+  if (eodSent.length === 0) {
+    console.log('null eod array')
+    return null
+  }
+  for (let i = 0; i < eodSent.length; i++) {
+    if (eodSent[i].id === body.user.id) {
+      slack.eodDmUpdateDelete(app, eodSent[i].channel, eodSent[i].ts)
+      slack.eodDmUpdatePost(app, eodSent[i].channel)
+      return eodSent
+    }
+  }
+  return -1
+}
+
+module.exports = { commandParse, handleGroupDelete, iterateEodSent }

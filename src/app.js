@@ -5,7 +5,6 @@ const schedule = require('./schedule')
 const helpers = require('./helpers')
 const appHelper = require('./app-helper')
 require('dotenv').config()
-
 // setting up app
 const app = new App({
   token: JSON.parse(process.env.SLACK_CREDS).SLACK_BOT_TOKEN,
@@ -24,6 +23,7 @@ if (process.env.DEV == 1) {
 
 // list of all cron tasks. This will be needed to stop tasks upon group deletion
 const allTasks = []
+const eodSent = []
 
 // upon startup, setup a cron job for all groups in the database
 schedule.startCronJobs(allTasks, app)
@@ -68,7 +68,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       break
     }
     case 'help': {
-      respond("EndyBot automates the process of creating and locating EOD threads for teams. 'Contributors' are prompted with neat forms to fill out at a specified time which will populate a thread in a specified channel. It also DMs 'Subscribers' with a link to the thread at the end of the day for easy reference.\n\nAll current working commands: \n\ncreate:\n------\nusage: /endyBot create\ndescription: Prompts the user with a form to fill out to create a group. Allows the user to specify the group name, contributors, subscribers, time of day contributors will recieve their EOD form, and the channel the thread will live in.\n\ndelete:\n------\nusage: /endyBot delete <group_name>\ndescription: Removes a group from the process and stops all scheduled messages from endyBot to submit EODs.\n\nlist:\n----\nusage: /endyBot list\ndescription: Provides all the groups currently added to endyBot and their corresponding number of contributors. It also identifies which groups the user who called the function is subscribed to.\n\nsubscribe:\n---------\nusage: /endyBot subscribe <group_name>\ndescription: subscribes the user who performs the command to the specified group. This acts as an opt-in to receive messages about the group.\n\nunsubscribe:\n-----------\nusage: /endyBot unsubscribe <group_name>\ndescription: unsubscribes the user who performs the command from the specified group.")
+      respond("EndyBot automates the process of creating and locating EOD threads for teams. 'Contributors' are prompted with neat forms to fill out at a specified time which will populate a thread in a specified channel. It also DMs 'Subscribers' with a link to the thread at the end of the day for easy reference.\n\nAll current working commands: \n\n* create *\n  ------\nusage: /endyBot create\ndescription: Prompts the user with a form to fill out to create a group. Allows the user to specify the group name, contributors, subscribers, time of day contributors will recieve their EOD form, and the channel the thread will live in. The times indicated in the part of the form is EST. \n\n* delete *\n  ------\nusage: /endyBot delete <group_name>\ndescription: Removes a group from the process and stops all scheduled messages from endyBot to submit EODs.\n\n* list *\n  ----\nusage: /endyBot list\ndescription: Provides all the groups currently added to endyBot and their corresponding number of contributors. It also identifies which groups the user who called the function is subscribed to.\n\n* describe *\n  --------\nusage: /endyBot describe <group name> \ndescription: describes all the attributes of a group. Group attributes include contributors, subscribers, channel the thread will be posted in, time the thread will be posted (EST)\n\n* subscribe *\n  ---------\nusage: /endyBot subscribe <group_name>\ndescription: subscribes the user who performs the command to the specified group. This acts as an opt-in to receive messages about the group.\n\n* unsubscribe *\n  -----------\nusage: /endyBot unsubscribe <group_name>\ndescription: unsubscribes the user who performs the command from the specified group.")
       break
     }
     // This triggers if a command that needs a group to be specified (ie describe, delete, etc.) is called without a group name. The parsing function overrides the command as 'noGroup'
@@ -100,6 +100,7 @@ app.view('create-group-view', async ({ view, ack }) => {
 // listen for response from EOD-response modal
 app.view('EOD-response', async ({ body, ack }) => {
   await ack()
+  appHelper.iterateEodSent(app, eodSent, body)
 
   // handle response from EOD modal here
   slack.postEODResponse(app, body.view, body.user.id)
