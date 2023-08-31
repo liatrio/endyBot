@@ -62,13 +62,13 @@ async function iterateEodSent (app, eodSent, body) {
     return null
   }
   for (let i = 0; i < eodSent.length; i++) {
-    if (eodSent[i].id === body.user.id) {
+    if (eodSent[i].uid === body.user.id) {
       slack.eodDmUpdateDelete(app, eodSent[i].channel, eodSent[i].ts)
       slack.eodDmUpdatePost(app, eodSent[i].channel)
       return eodSent
     }
   }
-  return -1
+  return eodSent
 }
 
 module.exports = { commandParse, handleGroupDelete, iterateEodSent }

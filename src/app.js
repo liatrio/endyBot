@@ -40,7 +40,7 @@ try {
   }
 
   // upon startup, setup a cron job for all groups in the database
-  schedule.startCronJobs(allTasks, app)
+  schedule.startCronJobs(eodSent, allTasks, app)
 } catch (error) {
   console.log(`Error starting app: ${error.message}`)
 }
@@ -120,7 +120,7 @@ try {
 
     // Add the new group to the cron scheduler
     const group = await database.getGroup(undefined, groupID)
-    schedule.scheduleCronJob(allTasks, group, app)
+    schedule.scheduleCronJob(eodSent, allTasks, group, app)
   })
 
   // listen for response from EOD-response modal

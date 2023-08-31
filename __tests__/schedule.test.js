@@ -173,7 +173,7 @@ describe('schedule.js testing suite', () => {
       // mock allTasks
       const allTasks = []
 
-      await schedule.scheduleCronJob(allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app)
 
       expect(allTasks.length).toEqual(1)
       expect(allTasks[0].contribTasks.length).toEqual(2)
@@ -196,7 +196,7 @@ describe('schedule.js testing suite', () => {
       // mock allTasks
       const allTasks = [{}, {}]
 
-      await schedule.scheduleCronJob(allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app)
 
       expect(allTasks.length).toEqual(3)
     })
@@ -246,7 +246,7 @@ describe('schedule.js testing suite', () => {
       // mock allTasks
       const allTasks = []
 
-      await schedule.scheduleCronJob(allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app)
 
       expect(allTasks[0].contribTasks.length).toEqual(1)
     })
