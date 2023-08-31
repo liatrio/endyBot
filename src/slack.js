@@ -118,7 +118,7 @@ async function dmSubs (app, group, sub, threadID) {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `Hey there, here's ${group.name}'s EOD thread`
+            text: `Hey there, here's *${group.name}*'s EOD thread`
           }
         },
         {
@@ -130,7 +130,24 @@ async function dmSubs (app, group, sub, threadID) {
             type: 'mrkdwn',
             text: `${link}`
           }
-        }]
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'You can unsubscribe from the group at any time to stop receiving these messages'
+          }
+        },
+        {
+          type: 'divider'
+        }
+      ],
+      // If the client doesn't support blocks, this text field will trigger and send the message
+      // This avoid's bolt throwing a warning each time a message is sent
+      text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}`
     })
   } catch (error) {
     console.error(`something went wrong trying to send the message: \n \
@@ -163,7 +180,8 @@ function parseCreateModal (view) {
       contributors: view.state.values.contributors.group_create_contributors.selected_users,
       subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
       postTime: time,
-      channel: view.state.values.channel.group_create_channel.selected_channel
+      channel: view.state.values.channel.group_create_channel.selected_channel,
+      ts: ''
     }
 
     return newGroup

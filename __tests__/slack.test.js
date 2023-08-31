@@ -87,7 +87,8 @@ describe('slack.js testing suite', () => {
         contributors: ['UID123', 'UID456'],
         subscribers: ['UID789', 'UID1110'],
         postTime: 1,
-        channel: 'CHID123'
+        channel: 'CHID123',
+        ts: ''
       }
 
       const res = slack.parseCreateModal(completeView)
