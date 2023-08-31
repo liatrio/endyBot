@@ -11,7 +11,12 @@ if (process.env.DEV == 0) {
   connection = `${usr}:${psswrd}@127.0.0.1:27017/endybot`
 }
 
-mongoose.connect(`mongodb://${connection}`).then(
+const connectOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}
+
+mongoose.connect(`mongodb://${connection}`, connectOptions).then(
   () => {
     console.log('Successfully connected to db')
   },
