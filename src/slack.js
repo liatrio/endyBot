@@ -69,11 +69,11 @@ async function dmUsers (app, group, user) {
       ]
     })
     message = { channel: res.channel, ts: res.ts, uid: user }
+    return message
   } catch (error) {
     console.error('something happened while sending dm: ', error)
     return null
   }
-  return message
 }
 
 /**
@@ -358,7 +358,7 @@ async function eodDmUpdateDelete (app, user, ts) {
       return null
     }
   } catch (error) {
-    console.error(error)
+    console.error('something went wrong while deleting the message: ', error)
   }
 }
 

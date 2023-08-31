@@ -26,7 +26,7 @@ const allTasks = []
 const eodSent = []
 
 // upon startup, setup a cron job for all groups in the database
-schedule.startCronJobs(allTasks, app)
+schedule.startCronJobs(eodSent, allTasks, app)
 
 // listen for user commands
 app.command(slashcommand, async ({ command, ack, respond }) => {
@@ -94,14 +94,13 @@ app.view('create-group-view', async ({ view, ack }) => {
 
   // Add the new group to the cron scheduler
   const group = await database.getGroup(undefined, groupID)
-  schedule.scheduleCronJob(allTasks, group, app)
+  schedule.scheduleCronJob(eodSent, allTasks, group, app)
 })
 
 // listen for response from EOD-response modal
 app.view('EOD-response', async ({ body, ack }) => {
   await ack()
   appHelper.iterateEodSent(app, eodSent, body)
-
   // handle response from EOD modal here
   slack.postEODResponse(app, body.view, body.user.id)
 })
