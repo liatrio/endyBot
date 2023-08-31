@@ -13,9 +13,7 @@ if (process.env.DEV == 0) {
 
 const connectOptions = {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-  useCreateIndex: true
+  useUnifiedTopology: true
 }
 
 mongoose.connect(`mongodb://${connection}`, connectOptions).then(
