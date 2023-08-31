@@ -3,7 +3,11 @@ const database = require('./db')
 const schedule = require('./schedule')
 
 // Analyze the entire command from the user, and populate the commandObj accordingly
-function commandParse (command, commandObj) {
+function commandParse (command) {
+  const commandObj = {
+    cmd: '',
+    groupName: ''
+  }
   try {
   // Split the command(string) into an array of words
     const parsed = command.split(' ')

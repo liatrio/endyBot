@@ -33,11 +33,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
   // declare command object to be populated in commandParse
-  const commandObj = {
-    cmd: '',
-    groupName: ''
-  }
-  appHelper.commandParse(command.text, commandObj)
+  const commandObj = appHelper.commandParse(command.text)
 
   switch (commandObj.cmd) {
     case 'create':{

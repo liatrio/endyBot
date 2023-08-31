@@ -18,52 +18,32 @@ jest.mock('../src/slack')
 
 describe('commandParse testing suite', () => {
   test('Valid command with group required', () => {
-    const commandObj = {
-      cmd: '',
-      groupName: ''
-    }
     const command = 'describe multi-worded group name'
-    appHelper.commandParse(command, commandObj)
+    const commandObj = appHelper.commandParse(command)
     expect(commandObj).toStrictEqual({ cmd: 'describe', groupName: 'multi-worded group name' })
   })
 
   test('Valid command without group required', () => {
-    const commandObj = {
-      cmd: '',
-      groupName: ''
-    }
     const command = 'list'
-    appHelper.commandParse(command, commandObj)
+    const commandObj = appHelper.commandParse(command)
     expect(commandObj).toStrictEqual({ cmd: 'list', groupName: null })
   })
 
   test('Invalid command with group required', () => {
-    const commandObj = {
-      cmd: '',
-      groupName: ''
-    }
     const command = 'subscribe'
-    appHelper.commandParse(command, commandObj)
+    const commandObj = appHelper.commandParse(command)
     expect(commandObj).toStrictEqual({ cmd: 'noGroup', groupName: null })
   })
 
   test('Group supplied when it doesn\'t need to be', () => {
-    const commandObj = {
-      cmd: '',
-      groupName: ''
-    }
     const command = 'create groupname'
-    appHelper.commandParse(command, commandObj)
+    const commandObj = appHelper.commandParse(command)
     expect(commandObj).toStrictEqual({ cmd: 'create', groupName: 'groupname' })
   })
 
   test('Garbage command', () => {
-    const commandObj = {
-      cmd: '',
-      groupName: ''
-    }
     const command = 'garbage command'
-    appHelper.commandParse(command, commandObj)
+    const commandObj = appHelper.commandParse(command)
     expect(commandObj).toStrictEqual({ cmd: 'garbage', groupName: 'command' })
   })
 })
