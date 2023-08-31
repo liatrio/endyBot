@@ -54,7 +54,6 @@ async function scheduleCronJob (allTasks, group, app) {
       // create the thread
       const ts = await slack.createPost(app, group)
 
-
       // update the DB entry with thread's ts
       group.ts = ts
       await group.save()
@@ -78,7 +77,7 @@ async function scheduleCronJob (allTasks, group, app) {
 
       // getting uid
       const contrib = usrInfo[0].id
-      
+
       // creating cron task for single user
       const contribTask = cron.schedule(cronTime, async () => {
         reminderSent = slack.dmUsers(app, group, contrib)
