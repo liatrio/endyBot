@@ -32,31 +32,28 @@ schedule.startCronJobs(allTasks, app)
 app.command(slashcommand, async ({ command, ack, respond }) => {
   await ack()
 
-  // TECHNICAL DEBT //
-  // Might want to flush this out to a full parse command similar to groupyBot but for now to access delete I need just the delete keyword
-  const parsed = command.text.split(' ')
-  const cmd = parsed[0]
-  const groupName = parsed[1]
+  // declare command object to be populated in commandParse
+  const commandObj = appHelper.commandParse(command.text)
 
-  switch (cmd) {
+  switch (commandObj.cmd) {
     case 'create':{
       // open group create modal
       slack.sendCreateModal(app, command.trigger_id)
       break
     }
     case 'subscribe': {
-      const res = await database.addSubscriber(groupName, command.user_id)
+      const res = await database.addSubscriber(commandObj.groupName, command.user_id)
       respond(res)
       break
     }
     case 'unsubscribe': {
-      const res = await database.removeSubscriber(groupName, command.user_id)
-      schedule.removeSubscriberTask(allTasks, groupName, command.user_id)
+      const res = await database.removeSubscriber(commandObj.groupName, command.user_id)
+      schedule.removeSubscriberTask(allTasks, commandObj.groupName, command.user_id)
       respond(res)
       break
     }
     case 'delete':{
-      const res = await appHelper.handleGroupDelete(app, allTasks, groupName, command.user_id)
+      const res = await appHelper.handleGroupDelete(app, allTasks, commandObj.groupName, command.user_id)
       respond(res)
       break
     }
@@ -66,7 +63,7 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       break
     }
     case 'describe': {
-      const data = await database.describeGroup(groupName)
+      const data = await database.describeGroup(commandObj.groupName)
       respond(data)
       break
     }
@@ -74,8 +71,13 @@ app.command(slashcommand, async ({ command, ack, respond }) => {
       respond("EndyBot automates the process of creating and locating EOD threads for teams. 'Contributors' are prompted with neat forms to fill out at a specified time which will populate a thread in a specified channel. It also DMs 'Subscribers' with a link to the thread at the end of the day for easy reference.\n\nAll current working commands: \n\n* create *\n  ------\nusage: /endyBot create\ndescription: Prompts the user with a form to fill out to create a group. Allows the user to specify the group name, contributors, subscribers, time of day contributors will recieve their EOD form, and the channel the thread will live in. The times indicated in the part of the form is EST. \n\n* delete *\n  ------\nusage: /endyBot delete <group_name>\ndescription: Removes a group from the process and stops all scheduled messages from endyBot to submit EODs.\n\n* list *\n  ----\nusage: /endyBot list\ndescription: Provides all the groups currently added to endyBot and their corresponding number of contributors. It also identifies which groups the user who called the function is subscribed to.\n\n* describe *\n  --------\nusage: /endyBot describe <group name> \ndescription: describes all the attributes of a group. Group attributes include contributors, subscribers, channel the thread will be posted in, time the thread will be posted (EST)\n\n* subscribe *\n  ---------\nusage: /endyBot subscribe <group_name>\ndescription: subscribes the user who performs the command to the specified group. This acts as an opt-in to receive messages about the group.\n\n* unsubscribe *\n  -----------\nusage: /endyBot unsubscribe <group_name>\ndescription: unsubscribes the user who performs the command from the specified group.")
       break
     }
+    // This triggers if a command that needs a group to be specified (ie describe, delete, etc.) is called without a group name. The parsing function overrides the command as 'noGroup'
+    case 'noGroup': {
+      respond('Oops! That command requires a group name to be specified.\nFor reference, use: *\'/endyBot help\'*')
+      break
+    }
     default:
-      respond(`Command ${command.text} not found`)
+      respond(`Sorry, *${commandObj.cmd}* is not a valid command.\nFor reference, use: *'/endyBot help'*`)
       break
   }
 })
