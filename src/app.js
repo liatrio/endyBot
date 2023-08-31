@@ -56,7 +56,11 @@ try {
     switch (commandObj.cmd) {
       case 'create':{
         // open group create modal
-        slack.sendCreateModal(app, command.trigger_id)
+        try {
+          await slack.sendCreateModal(app, command.trigger_id)
+        } catch (error) {
+          respond('Whoops! Looks like we bit off a bit more than we can chew. Please re-attempt to create the group in a few moments.')
+        }
         break
       }
       case 'subscribe': {
