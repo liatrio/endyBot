@@ -159,16 +159,22 @@ async function dmSubs (app, group, sub, threadID) {
 }
 
 async function sendCreateModal (app, triggerId) {
-  const res = await app.client.views.open({
-    trigger_id: triggerId,
-    view: views.groupCreate
-  })
+  try {
+    const res = await app.client.views.open({
+      trigger_id: triggerId,
+      view: views.groupCreate
+    })
 
-  if (res.ok != true) {
-    console.log(`Error opening modal: ${res.error}`)
-    return -1
+    if (res.ok != true) {
+      console.log(`Error opening modal: ${res.error}`)
+      return -1
+    }
+    return 0
+  } catch (error) {
+    console.log(`Exception thrown while sending modal: ${error.message}`)
+    // throw error to be caught in app.js and print a message to the user
+    throw error
   }
-  return 0
 }
 
 function parseCreateModal (view) {
