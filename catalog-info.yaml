@@ -2,32 +2,24 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: endyBot
-  # description: Add a useful description before merging
+  description: A slackbot that organizes and tracks EOD threads
 
-  # Annotations Docs: https://backstage.io/docs/features/software-catalog/well-known-annotations
   annotations:
     github.com/project-slug: liatrio/endyBot
+    backstage.io/techdocs-ref: 'url:https://github.com/liatrio/endyBot'
 
-  # Tags Docs: https://backstage.io/docs/features/software-catalog/descriptor-format/#metadatatags-optional
-  # tags:
-  #   - example
-  #   - tag
+  tags:
+    - node
+    - javascript
+    - aws
+    - bolt
 
-  # Links Docs: https://backstage.io/docs/features/software-catalog/descriptor-format/#links-optional
-  # links:
-  #   - url: https://example.com/user
-  #     title: Examples Users
-  #     icon: user
-  #   - url: https://example.com/group
-  #     title: Example Group
-  #     icon: group
+  links:
+    - url: https://us-west-1.console.aws.amazon.com/ecs/v2/clusters/endyBot_cluster/services?region=us-west-1
+    - title: AWS Prod Cluster
+    - icon: dashboard
 
 spec:
-  # https://backstage.io/docs/features/software-catalog/descriptor-format/#spectype-required
   type: service
-  # Review lifecycle and pick one of the three that make the most sense.
-  # https://backstage.io/docs/features/software-catalog/descriptor-format/#speclifecycle-required
   lifecycle: production
-  # Please update to include the GitHub Team name tied to this project.
-  # https://backstage.io/docs/features/software-catalog/descriptor-format/#specowner-required
-  owner: liatrio-team-members
+  owner: immortal-hedgehogs
