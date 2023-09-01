@@ -5,17 +5,16 @@ const db = require('./db')
 require('node-cron')
 
 let reminderSent
-let usrList = []
 
 // All code for the node-cron scheduler goes here
 
 // called from app.js on app startup. sets up cron jobs for all groups in the database
-async function startCronJobs (eodSent, allTasks, app) {
+async function startCronJobs (eodSent, allTasks, app, usrList) {
   const groups = await Group.find({})
   if (groups.length !== 0) {
     for (const group of groups) {
       // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
-      await scheduleCronJob(eodSent, allTasks, group, app)
+      await scheduleCronJob(eodSent, allTasks, group, app, usrList)
     }
     return 0
   }
@@ -31,7 +30,7 @@ async function startCronJobs (eodSent, allTasks, app) {
  * @param {Bolt_App} app
  * @returns 0 on success, null on error
  */
-async function scheduleCronJob (eodSent, allTasks, group, app) {
+async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
   if (group == null) {
     return null
   }
@@ -168,7 +167,7 @@ function removeAllTasks (allTasks, groupName) {
 }
 
 // function to remove a single subscriber task (for unsubscribe functionality)
-async function addSubscriberTask (app, allTasks, groupName, subscriber) {
+async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList) {
   try {
     const group = await db.getGroup(groupName, undefined)
     if (group === null) {
@@ -204,6 +203,7 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber) {
     for (const entry of allTasks) {
       if (entry.group === groupName) {
         entry.subTasks.push(subObj)
+        break
       }
     }
   } catch (error) {

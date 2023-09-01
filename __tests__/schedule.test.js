@@ -269,6 +269,91 @@ describe('schedule.js testing suite', () => {
     })
   })
 
+  describe('addSubscriberTask tests', () => {
+    const list = [
+      {
+        group: 'test_group1',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'alice',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      },
+      {
+        group: 'test_group2',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'endy',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      },
+      {
+        group: 'test_group3',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'robert',
+            task: {
+              stop: jest.fn()
+            }
+          },
+          {
+            name: 'bobby',
+            task: {
+              stop: jest.fn()
+            }
+          },
+          {
+            name: 'bob',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      }
+    ]
+    test.only('addSubscriberTask', () => {
+      schedule.addSubscriberTask(app, list, 'test_group3', 'tommy')
+      console.log(list[2].group)
+      expect(list[2].subTasks.length).toEqual(4)
+    })
+  })
+
   describe('removeSubscriberTask tests', () => {
     const list = [
       {

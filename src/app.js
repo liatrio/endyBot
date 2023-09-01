@@ -27,6 +27,7 @@ let slashcommand
 
 // list of all cron tasks. This will be needed to stop tasks upon group deletion
 const allTasks = []
+const usrList = []
 const eodSent = []
 
 // starting app
@@ -40,7 +41,7 @@ try {
   }
 
   // upon startup, setup a cron job for all groups in the database
-  schedule.startCronJobs(eodSent, allTasks, app)
+  schedule.startCronJobs(eodSent, allTasks, app, usrList)
 } catch (error) {
   console.log(`Error starting app: ${error.message}`)
 }
@@ -121,7 +122,7 @@ try {
 
     // Add the new group to the cron scheduler
     const group = await database.getGroup(undefined, groupID)
-    schedule.scheduleCronJob(eodSent, allTasks, group, app)
+    schedule.scheduleCronJob(eodSent, allTasks, group, app, usrList)
   })
 
   // listen for response from EOD-response modal
