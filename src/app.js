@@ -65,6 +65,7 @@ try {
       }
       case 'subscribe': {
         const res = await database.addSubscriber(commandObj.groupName, command.user_id)
+        schedule.addSubscriberTask(app, allTasks, commandObj.groupName, command.user_id)
         respond(res)
         break
       }
