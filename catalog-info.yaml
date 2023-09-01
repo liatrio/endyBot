@@ -1,0 +1,25 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: endyBot
+  description: A slackbot that organizes and tracks EOD threads
+
+  annotations:
+    github.com/project-slug: liatrio/endyBot
+    backstage.io/techdocs-ref: 'url:https://github.com/liatrio/endyBot'
+
+  tags:
+    - node
+    - javascript
+    - aws
+    - bolt
+
+  links:
+    - url: https://us-west-1.console.aws.amazon.com/ecs/v2/clusters/endyBot_cluster/services?region=us-west-1
+    - title: AWS Prod Cluster
+    - icon: dashboard
+
+spec:
+  type: service
+  lifecycle: production
+  owner: immortal-hedgehogs
