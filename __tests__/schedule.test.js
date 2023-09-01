@@ -6,9 +6,6 @@ const Group = require('../db-schemas/group')
 const schedule = require('../src/schedule')
 const { App } = require('@slack/bolt')
 
-// including slack with a name so I can override default mocks
-const slack = require('../src/slack')
-
 // mocking out slack.js and db.js since they're used in schedule.js
 jest.mock('../src/slack')
 jest.mock('../src/db')
@@ -154,8 +151,8 @@ describe('schedule.js testing suite', () => {
         channel: 'CID123'
       }
 
-      // mock return values on all called functions
-      slack.getUserList.mockResolvedValue([
+      // mock usrList
+      const usrList = [
         {
           id: 'UID123',
           tz: 'Timezone'
@@ -168,12 +165,12 @@ describe('schedule.js testing suite', () => {
           id: 'UID789',
           tz: 'Timezone'
         }
-      ])
+      ]
 
       // mock allTasks
       const allTasks = []
 
-      await schedule.scheduleCronJob([], allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app, usrList)
 
       expect(allTasks.length).toEqual(1)
       expect(allTasks[0].contribTasks.length).toEqual(2)
@@ -190,13 +187,26 @@ describe('schedule.js testing suite', () => {
         channel: 'CID123'
       }
 
-      // mock return values on all called functions
-      slack.getUserList.mockResolvedValue(['usr1', 'usr2'])
+      // mock usrList
+      const usrList = [
+        {
+          id: 'UID123',
+          tz: 'Timezone'
+        },
+        {
+          id: 'UID456',
+          tz: 'Timezone'
+        },
+        {
+          id: 'UID789',
+          tz: 'Timezone'
+        }
+      ]
 
       // mock allTasks
       const allTasks = [{}, {}]
 
-      await schedule.scheduleCronJob([], allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app, usrList)
 
       expect(allTasks.length).toEqual(3)
     })
@@ -235,18 +245,18 @@ describe('schedule.js testing suite', () => {
         channel: 'CID123'
       }
 
-      // mock return values on all called functions
-      slack.getUserList.mockResolvedValue([
+      // mock usrList
+      const usrList = [
         {
           id: 'UID123',
           tz: 'Timezone'
         }
-      ])
+      ]
 
       // mock allTasks
       const allTasks = []
 
-      await schedule.scheduleCronJob([], allTasks, group, app)
+      await schedule.scheduleCronJob([], allTasks, group, app, usrList)
 
       expect(allTasks[0].contribTasks.length).toEqual(1)
     })
@@ -266,6 +276,46 @@ describe('schedule.js testing suite', () => {
     test('Pass invalid time to convertPostTimeToCron', async () => {
       const result = schedule.convertPostTimeToCron(25)
       expect(result).toBeNull()
+    })
+  })
+
+  describe('addSubscriberTask tests', () => {
+    const allTasks = [
+      {
+        group: 'test_group1',
+        threadTask: {
+          stop: jest.fn()
+        },
+        contribTasks: [
+          {
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ],
+        subTasks: [
+          {
+            name: 'UID123',
+            task: {
+              stop: jest.fn()
+            }
+          }
+        ]
+      }
+    ]
+
+    const usrList = [
+      {
+        id: 'UID123'
+      },
+      {
+        id: 'UID234'
+      }
+    ]
+
+    test('Add new subscriber', async () => {
+      await schedule.addSubscriberTask(app, allTasks, 'test_group1', 'UID234', usrList)
+      expect(allTasks[0].subTasks.length).toStrictEqual(2)
     })
   })
 

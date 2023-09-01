@@ -1,19 +1,20 @@
 const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
 const slack = require('./slack')
+const db = require('./db')
 require('node-cron')
 
 let reminderSent
-// const eodSent = []
+
 // All code for the node-cron scheduler goes here
 
 // called from app.js on app startup. sets up cron jobs for all groups in the database
-async function startCronJobs (eodSent, allTasks, app) {
+async function startCronJobs (eodSent, allTasks, app, usrList) {
   const groups = await Group.find({})
   if (groups.length !== 0) {
     for (const group of groups) {
       // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
-      await scheduleCronJob(eodSent, allTasks, group, app)
+      await scheduleCronJob(eodSent, allTasks, group, app, usrList)
     }
     return 0
   }
@@ -29,19 +30,12 @@ async function startCronJobs (eodSent, allTasks, app) {
  * @param {Bolt_App} app
  * @returns 0 on success, null on error
  */
-async function scheduleCronJob (eodSent, allTasks, group, app) {
+async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
   if (group == null) {
     return null
   }
 
   try {
-    // get user list so we can access contributor and subscriber timezones
-    const usrList = await slack.getUserList(app)
-    if (typeof usrList != 'object') {
-      console.log('Unable to schedule cron job: Unable to get user list from Slack.')
-      return null
-    }
-
     // convert db postTime to cron time
     const cronTime = convertPostTimeToCron(group.postTime)
     if (cronTime == null) {
@@ -166,6 +160,49 @@ function removeAllTasks (allTasks, groupName) {
 }
 
 // function to remove a single subscriber task (for unsubscribe functionality)
+async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList) {
+  try {
+    const group = await db.getGroup(groupName, undefined)
+    if (group === null) {
+      return
+    }
+
+    // look for users timezone
+    const usrInfo = usrList.filter((usr) => usr.id == subscriber)
+    if (usrInfo.length != 1) {
+      // unable to locate user, try to add other group memebers
+      console.log('Error: Unable to schedule task; could not find subscriber')
+      return
+    }
+
+    // getting index 0 because filter returns a list
+    const tz = usrInfo[0].tz
+
+    // creating cron task for single user. Subs will get the link at 8pm local time
+    const subTask = cron.schedule('0 20 * * 1-5', async () => {
+      slack.dmSubs(app, group, subscriber, group.ts)
+    }, {
+      timezone: tz
+    })
+
+    const subObj = {
+      name: subscriber,
+      task: subTask
+    }
+
+    // now that we've scheduled the task and saved it in an obj
+    for (const entry of allTasks) {
+      if (entry.group === groupName) {
+        entry.subTasks.push(subObj)
+        break
+      }
+    }
+  } catch (error) {
+    console.log(`Error while adding subscriber task: ${error.message}`)
+  }
+}
+
+// function to remove a single subscriber task (for unsubscribe functionality)
 function removeSubscriberTask (allTasks, groupName, subscriber) {
   // look for group
   for (const entry of allTasks) {
@@ -234,4 +271,4 @@ function convertPostTimeToCron (hour) {
   return `0 ${cronHour} * * 1-5`
 }
 
-module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeAllTasks, removeSubscriberTask }
+module.exports = { startCronJobs, scheduleCronJob, convertPostTimeToCron, removeAllTasks, addSubscriberTask, removeSubscriberTask }
