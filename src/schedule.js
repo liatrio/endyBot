@@ -36,13 +36,6 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
   }
 
   try {
-    // get user list so we can access contributor and subscriber timezones
-    usrList = await slack.getUserList(app)
-    if (typeof usrList != 'object') {
-      console.log('Unable to schedule cron job: Unable to get user list from Slack.')
-      return null
-    }
-
     // convert db postTime to cron time
     const cronTime = convertPostTimeToCron(group.postTime)
     if (cronTime == null) {
@@ -175,7 +168,6 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
     }
 
     // look for users timezone
-
     const usrInfo = usrList.filter((usr) => usr.id == subscriber)
     if (usrInfo.length != 1) {
       // unable to locate user, try to add other group memebers
@@ -199,7 +191,6 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
     }
 
     // now that we've scheduled the task and saved it in an obj
-
     for (const entry of allTasks) {
       if (entry.group === groupName) {
         entry.subTasks.push(subObj)

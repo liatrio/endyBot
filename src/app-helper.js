@@ -71,4 +71,19 @@ async function iterateEodSent (app, eodSent, body) {
   return eodSent
 }
 
-module.exports = { commandParse, handleGroupDelete, iterateEodSent }
+function updateUser (usrList, event) {
+  // define test to filter list by
+  const changedUsr = (usr) => usr.id == event.user.id
+
+  // get index that matches test above
+  const ind = usrList.findIndex(changedUsr)
+
+  // update our user entry
+  usrList[ind] = event.user
+}
+
+function addUser (usrList, event) {
+  usrList.push(event.user)
+}
+
+module.exports = { commandParse, handleGroupDelete, iterateEodSent, updateUser, addUser }

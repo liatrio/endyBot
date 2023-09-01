@@ -27,7 +27,7 @@ let slashcommand
 
 // list of all cron tasks. This will be needed to stop tasks upon group deletion
 const allTasks = []
-const usrList = []
+let usrList = []
 const eodSent = []
 
 // starting app
@@ -40,8 +40,13 @@ try {
     slashcommand = '/endybot-dev'
   }
 
-  // upon startup, setup a cron job for all groups in the database
-  schedule.startCronJobs(eodSent, allTasks, app, usrList)
+  // get user list so we can access contributor and subscriber timezones
+  slack.getUserList(app).then((res) => {
+    usrList = res
+
+    // upon startup, setup a cron job for all groups in the database
+    schedule.startCronJobs(eodSent, allTasks, app, usrList)
+  })
 } catch (error) {
   console.log(`Error starting app: ${error.message}`)
 }
@@ -66,7 +71,7 @@ try {
       }
       case 'subscribe': {
         const res = await database.addSubscriber(commandObj.groupName, command.user_id)
-        schedule.addSubscriberTask(app, allTasks, commandObj.groupName, command.user_id)
+        schedule.addSubscriberTask(app, allTasks, commandObj.groupName, command.user_id, usrList)
         respond(res)
         break
       }
@@ -164,6 +169,20 @@ try {
   })
 } catch (error) {
   console.log(`Error in app.action: ${error.message}`)
+}
+
+try {
+  // updating user entry on profile change
+  app.event('user_profile_changed', ({ event }) => {
+    appHelper.updateUser(usrList, event)
+  })
+
+  // adding user entry to usrList upon joining workspace
+  app.event('team_join', ({ event }) => {
+    appHelper.addUser(usrList, event)
+  })
+} catch (error) {
+  console.log(`Error in app.userUpdate: ${error.message}`)
 }
 
 module.exports = { app }

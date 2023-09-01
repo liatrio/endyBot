@@ -93,3 +93,58 @@ describe('iterateEodSent() tests', () => {
     expect(res).toBe(null)
   })
 })
+
+describe('updateUser tests', () => {
+  test('Update user', () => {
+    const usrList = [
+      {
+        id: '12345',
+        name: 'Jesse'
+      },
+      {
+        id: '67891',
+        name: 'James'
+      }
+    ]
+
+    const event = {
+      user: {
+        id: '12345',
+        name: 'Ash'
+      }
+    }
+
+    appHelper.updateUser(usrList, event)
+
+    expect(usrList.length).toStrictEqual(2)
+    expect(usrList[0].name).toStrictEqual('Ash')
+    expect(usrList[0].id).toStrictEqual('12345')
+  })
+})
+
+describe('addUser tests', () => {
+  test('Add new user', () => {
+    const usrList = [
+      {
+        id: '12345',
+        name: 'Jesse'
+      },
+      {
+        id: '67891',
+        name: 'James'
+      }
+    ]
+
+    const event = {
+      user: {
+        id: '111213',
+        name: 'Ash'
+      }
+    }
+
+    appHelper.addUser(usrList, event)
+
+    expect(usrList.length).toStrictEqual(3)
+    expect(usrList[2]).toStrictEqual(event.user)
+  })
+})
