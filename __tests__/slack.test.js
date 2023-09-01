@@ -87,7 +87,8 @@ describe('slack.js testing suite', () => {
         contributors: ['UID123', 'UID456'],
         subscribers: ['UID789', 'UID1110'],
         postTime: 1,
-        channel: 'CHID123'
+        channel: 'CHID123',
+        ts: ''
       }
 
       const res = slack.parseCreateModal(completeView)
@@ -131,18 +132,29 @@ describe('slack.js testing suite', () => {
 
     test('Successfully sent conributor a DM', async () => {
       const group = {
-        contributors: ['UID123', 'UID456']
+        name: 'test'
       }
-      const result = await slack.dmUsers(mockApp, group)
-      expect(result).toBe(0)
+
+      const expected = {
+        channel: 'C123ABC456',
+        ts: '1503435956.000247',
+        uid: 'U1234556'
+      }
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const result = await slack.dmUsers(mockApp, group.name, expected.uid)
+      expect(result).toStrictEqual(expected)
     })
 
-    test('No contributors in group error', async () => {
+    test('Could not sent contributor a DM', async () => {
       const group = {
+        name: 'Test',
         contributors: []
       }
-      const result = await slack.dmUsers(mockApp, group)
-      expect(result).toBe(-1)
+      mockApp.client.chat.postMessage.mockRejectedValue()
+
+      const user = 'UID123'
+      const result = await slack.dmUsers(mockApp, group, user)
+      expect(result).toEqual(null)
     })
   })
 
@@ -158,8 +170,9 @@ describe('slack.js testing suite', () => {
         subscribers: ['UID123', 'UID456'],
         channel: '45678'
       }
+      const sub = group.subscribers[0]
       const ts = '1234.5678'
-      const result = await slack.dmSubs(mockApp, group, ts)
+      const result = await slack.dmSubs(mockApp, group, sub, ts)
       expect(result).toBe(0)
     })
 
@@ -167,8 +180,9 @@ describe('slack.js testing suite', () => {
       const group = {
         subscribers: []
       }
+      const sub = ''
       const ts = '1234.5678'
-      const result = await slack.dmSubs(mockApp, group, ts)
+      const result = await slack.dmSubs(mockApp, group, sub, ts)
       expect(result).toBe(1)
     })
 
@@ -330,5 +344,160 @@ describe('slack.js testing suite', () => {
 
       expect(res).toEqual(expectedRes)
     })
+  })
+
+  describe('eodDmUpdateDelete() tests', () => {
+    const mockApp = new App({})
+
+    test('check that the message is successfully deleted', async () => {
+      const expected = {
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1401383885.000061'
+      }
+
+      mockApp.client.chat.delete = jest.fn().mockResolvedValue({
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1401383885.000061'
+      })
+
+      const res = await slack.eodDmUpdateDelete(mockApp, expected.channel, expected.ts)
+      expect(res).toStrictEqual(expected)
+    })
+
+    test('failed deletion of prev message', async () => {
+      const expected = {
+        ok: false,
+        channel: '',
+        ts: ''
+      }
+
+      mockApp.client.chat.delete = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdateDelete(mockApp, expected.channel, expected.ts)
+      expect(res).toBe(null)
+    })
+  })
+
+  describe('eodDmUpdatePost() tests', () => {
+    const mockApp = new App({})
+
+    test('test message has been sent successfully', async () => {
+      const expected = {
+        ok: true,
+        channel: 'C123ABC456',
+        ts: '1503435956.000247',
+        message: {
+          text: "Here's a message for you",
+          username: 'ecto1',
+          bot_id: 'B123ABC456',
+          attachments: [
+            {
+              text: 'This is an attachment',
+              id: 1,
+              fallback: "This is an attachment's fallback"
+            }
+          ],
+          type: 'message',
+          subtype: 'bot_message',
+          ts: '1503435956.000247'
+        }
+      }
+
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdatePost(mockApp, expected.channel)
+      expect(res).toStrictEqual(expected)
+    })
+
+    test('test a failed postMessage', async () => {
+      const expected = {
+        ok: false,
+        error: 'too_many_attachments'
+      }
+      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
+      const res = await slack.eodDmUpdatePost(mockApp, expected.channel)
+      expect(res).toStrictEqual(null)
+    })
+  })
+
+  describe('getUserList tests', () => {
+    const mockApp = new App({})
+
+    test('Successful API call', async () => {
+      // mocking api response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: true,
+        members: [
+          {
+            id: 'UID1234',
+            name: 'johnd',
+            real_name: 'John Doe',
+            tz: 'America/Los_Angeles'
+          },
+          {
+            id: 'UID5678',
+            name: 'johnm',
+            real_name: 'John Moe',
+            tz: 'America/Los_Angeles'
+          }
+        ]
+      })
+
+      // defining expected result and running test
+      const expectedRes = [
+        {
+          id: 'UID1234',
+          name: 'johnd',
+          real_name: 'John Doe',
+          tz: 'America/Los_Angeles'
+        },
+        {
+          id: 'UID5678',
+          name: 'johnm',
+          real_name: 'John Moe',
+          tz: 'America/Los_Angeles'
+        }
+      ]
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(expectedRes)
+    })
+
+    test('Unsuccessful API call', async () => {
+      // mocking failed API response
+      mockApp.client.users.list.mockResolvedValue({
+        ok: false,
+        error: Error('Unable to get user list')
+      })
+
+      const res = await slack.getUserList(mockApp)
+
+      expect(res).toStrictEqual(Error('Unable to get user list'))
+    })
+  })
+})
+
+describe('notifySubsAboutGroupDeletion testing suite', () => {
+  let mockApp
+
+  beforeEach(() => {
+    mockApp = new App({})
+  })
+
+  test('Successfully sent subscribers a DM', async () => {
+    const group = {
+      subscribers: ['UID123', 'UID456']
+    }
+    const result = await slack.notifySubsAboutGroupDeletion(mockApp, group, 'UID123')
+    expect(result).toBe(0)
+  })
+
+  test('No subscribers in group error', async () => {
+    const group = {
+      subscribers: []
+    }
+    const result = await slack.notifySubsAboutGroupDeletion(mockApp, group, 'UID123')
+    expect(result).toBe(1)
   })
 })

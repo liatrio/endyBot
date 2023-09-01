@@ -8,5 +8,9 @@ module.exports = {
   sendCreateModal: jest.fn(() => Promise.resolve()),
   parseCreateModal: jest.fn(),
   sendEODModal: jest.fn(() => Promise.resolve()),
-  updateEODModal: jest.fn()
+  updateEODModal: jest.fn(),
+  notifySubsAboutGroupDeletion: jest.fn(() => Promise.resolve()),
+  getUserList: jest.fn(() => Promise.resolve()),
+  eodDmUpdateDelete: jest.fn(() => Promise.resolve()),
+  eodDmUpdatePost: jest.fn(() => Promise.resolve())
 }

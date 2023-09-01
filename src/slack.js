@@ -17,7 +17,7 @@ async function createPost (app, group) {
     const groupname = group.name
     const res = await app.client.chat.postMessage({
       channel: cID,
-      text: `${groupname} EOD :thread:`
+      text: `*${groupname}* EOD :thread:`
     })
     return res.ts
   } catch (error) {
@@ -32,49 +32,48 @@ async function createPost (app, group) {
  * @param {*} group
  * @returns 0 on success and -1 if there are no contributors
  */
-async function dmUsers (app, group) {
-  if (!group.contributors.length) {
-    console.log('no contributors in the group!')
-    return -1
+async function dmUsers (app, group, user) {
+  if (!user) {
+    console.log('null user')
+    return user
   }
-  for (const user of group.contributors) {
-    try {
-      app.client.chat.postMessage({
-        channel: user,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `It's time to write your EOD posts for *${group.name}!*`
-            }
-          },
-          {
-            type: 'divider'
-          },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: {
-                  type: 'plain_text',
-                  text: 'Begin EOD Post',
-                  emoji: true
-                },
-                action_id: 'write_eod'
-              }
-            ]
+  let message
+  try {
+    const res = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `It's time to write your EOD posts for *${group.name}!*`
           }
-        ]
-      })
-      console.log('message sent')
-    } catch (error) {
-      console.error('something happened while sending dm: ', error)
-      continue
-    }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: 'Begin EOD Post',
+                emoji: true
+              },
+              action_id: 'write_eod'
+            }
+          ]
+        }
+      ]
+    })
+    message = { channel: res.channel, ts: res.ts, uid: user }
+    return message
+  } catch (error) {
+    console.error('something happened while sending dm: ', error)
+    return null
   }
-  return 0
 }
 
 /**
@@ -106,57 +105,76 @@ async function validateInput (group, threadID) {
  * @param {*} threadID
  * @returns variable check which should be 0 on success and 1,2, or 3 depending on the error
  */
-async function dmSubs (app, group, threadID) {
+async function dmSubs (app, group, sub, threadID) {
   const check = validateInput(group, threadID)
   // unsure how to make this more dynamic simply unless we intend to distribute this amongst multiple organization workspaces
   const link = `${process.env.ORG}${group.channel}/p${threadID}`
 
-  for (const sub of group.subscribers) {
-    try {
-      app.client.chat.postMessage({
-        channel: sub,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `Hey there, here's ${group.name}'s EOD thread`
-            }
-          },
-          {
-            type: 'divider'
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `${link}`
-            }
-          }]
-      })
-    } catch (error) {
-      console.log('')
-      console.error(`something went wrong trying to send the message: \n \
+  try {
+    app.client.chat.postMessage({
+      channel: sub,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `Hey there, here's *${group.name}*'s EOD thread`
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `${link}`
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'You can unsubscribe from the group at any time to stop receiving these messages'
+          }
+        },
+        {
+          type: 'divider'
+        }
+      ],
+      // If the client doesn't support blocks, this text field will trigger and send the message
+      // This avoid's bolt throwing a warning each time a message is sent
+      text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}`
+    })
+  } catch (error) {
+    console.error(`something went wrong trying to send the message: \n \
       sub: ${group.sub}\n \
       group: ${group.name}\n \
       error: `, error)
-      continue
-    }
   }
   return check
 }
 
 async function sendCreateModal (app, triggerId) {
-  const res = await app.client.views.open({
-    trigger_id: triggerId,
-    view: views.groupCreate
-  })
+  try {
+    const res = await app.client.views.open({
+      trigger_id: triggerId,
+      view: views.groupCreate
+    })
 
-  if (res.ok != true) {
-    console.log(`Error opening modal: ${res.error}`)
-    return -1
+    if (res.ok != true) {
+      console.log(`Error opening modal: ${res.error}`)
+      return -1
+    }
+    return 0
+  } catch (error) {
+    console.log(`Exception thrown while sending modal: ${error.message}`)
+    // throw error to be caught in app.js and print a message to the user
+    throw error
   }
-  return 0
 }
 
 function parseCreateModal (view) {
@@ -168,7 +186,8 @@ function parseCreateModal (view) {
       contributors: view.state.values.contributors.group_create_contributors.selected_users,
       subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
       postTime: time,
-      channel: view.state.values.channel.group_create_channel.selected_channel
+      channel: view.state.values.channel.group_create_channel.selected_channel,
+      ts: ''
     }
 
     return newGroup
@@ -270,4 +289,111 @@ async function postEODResponse (app, view, uid) {
   return res.message.blocks
 }
 
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs }
+/**
+ * sends a message to each subscriber of a group when it is deleted
+ * @param {*} app
+ * @param {*} group
+ * @param {String} userID
+ * @returns 0 on success and null if there are no subscribers
+ */
+async function notifySubsAboutGroupDeletion (app, group, userID) {
+  // The passed in group has already been verified by handleGroupDeletion in app-helper
+  if (group.subscribers.length == 0) {
+    console.log('No subscribers in the group')
+    return 1
+  }
+  // Send a message to each subscriber notifying them what group was deleted, and which user deleted it
+  for (const user of group.subscribers) {
+    try {
+      app.client.chat.postMessage({
+        channel: user,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `Group *${group.name}* was deleted by <@${userID}>. You're receiving this notification because you were a subscriber of the group.\n\nYou will no longer receive EOD thread links for the group.`
+            }
+          }
+        ]
+      })
+    } catch (error) {
+      console.error(`something happened while notifying subscriber ${user} about ${group.name} deletion: `, error)
+      continue
+    }
+  }
+  return 0
+}
+
+/**
+ * Uses the Slack API to get a list of all users in the workspace, as well as information about them.
+ *
+ * @param {JSON} app
+ * @returns The list of all users in the current slack workspace.
+ * check slack docs for object description
+ */
+async function getUserList (app) {
+  const usrList = await app.client.users.list()
+
+  if (usrList.ok != true) {
+    // error in API call
+    console.log(`Unable to get user list: ${usrList.error}`)
+    return usrList.error
+  }
+
+  return usrList.members
+}
+
+/**
+ * deletes a direct message for a user
+ * @param {*} app
+ * @param {*} user
+ * @param {*} ts
+ * @returns json response from slack api on success and null on failure
+ */
+async function eodDmUpdateDelete (app, user, ts) {
+  try {
+    const res = await app.client.chat.delete({
+      channel: user,
+      ts
+    })
+
+    if (res.ok) {
+      return res
+    } else {
+      return null
+    }
+  } catch (error) {
+    console.error('something went wrong while deleting the message: ', error)
+  }
+}
+
+/**
+ * resends a message to the user
+ * @param {*} app
+ * @param {*} user
+ * @returns json response on success and null on failure
+ */
+async function eodDmUpdatePost (app, user) {
+  try {
+    const message = await app.client.chat.postMessage({
+      channel: user,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*thank you for writing your EOD!*'
+          }
+        }
+      ]
+    })
+    if (!message.ok) {
+      return null
+    }
+    return message
+  } catch (error) {
+    console.error(error)
+  }
+}
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList }
