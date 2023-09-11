@@ -1,5 +1,11 @@
 const { mongoose } = require('mongoose')
 const Group = require('../db-schemas/group.js')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'debug' // setting to this level in prod to help find bugs
+}))
 
 // Put all functions interacting with the database here
 
@@ -12,10 +18,10 @@ const connectOptions = {
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
 mongoose.connect(`mongodb://${db}:27017/endybot`, connectOptions).then(
   () => {
-    console.log('Successfully connected to db')
+    logger.info('Successfully connected to database')
   },
   err => {
-    console.log('Could not connect to db. Error: ' + err)
+    logger.error('Could not connect to db. Error: ' + err)
   })
 
 async function addToDB (groupJson) {
@@ -23,7 +29,7 @@ async function addToDB (groupJson) {
     const inserted = await Group.create(groupJson)
     return inserted._id
   } catch (err) {
-    console.error('error adding to the database: ', err)
+    logger.error(`Unable to add ${groupJson.name} to database: ${err}`)
     return null
   }
 }
@@ -41,11 +47,14 @@ async function deleteGroup (groupName) {
   try {
     const result = await Group.deleteOne({ name: groupName })
     if (result.deletedCount > 0) {
+      logger.info(`${groupName} was successfully removed from the database.`)
       return `*${groupName}* was removed successfully`
     } else {
+      logger.warn(`Attempted to remove ${groupName} from the database unsuccessfully`)
       return `*${groupName}* was not deleted`
     }
   } catch (error) {
+    logger.error(`Unable to delete ${groupName} from the database: ${error.message}`)
     return `Error while deleting ${groupName}: ${error.message}`
   }
 }
@@ -67,6 +76,7 @@ async function listGroups (userID) {
       return 'No groups to be listed'
     }
   } catch (error) {
+    logger.error(`Error fetching groups from database: ${error.message}`)
     return `Error while gathering groups from database: ${error.message}`
   }
 
@@ -84,6 +94,7 @@ async function listGroups (userID) {
       }
     }
   } catch (error) {
+    logger.error(`Error parsing subscriber list in listGroups: ${error.message}`)
     return `Error while parsing through subscriber lists in listGroups: ${error.message}`
   }
 
@@ -116,6 +127,7 @@ async function listGroups (userID) {
     // Return fully formatted string to be printed
     return stringedResult
   } catch (error) {
+    logger.error(`Error concatenating string in listGroups: ${error.message}`)
     return `Error while concatenating string in listGroups: ${error.message}`
   }
 }
@@ -141,7 +153,7 @@ async function getGroup (groupName, groupID) {
   }
 
   if (JSON.stringify(searchParams) == '{}') {
-    console.log('Please supply either the groupID or group name.')
+    logger.error('Please supply either the groupID or group name.')
     return -1
   }
 
@@ -191,6 +203,7 @@ async function describeGroup (groupname) {
 
     return stringedResult
   } catch (error) {
+    logger.error(`Error while describing group ${groupname}: ${error.message}`)
     return `Error while describing group ${groupname}: ${error.message}`
   }
 }
@@ -223,8 +236,10 @@ async function addSubscriber (groupname, userID) {
     await group.save()
 
     // Notify user upon success
+    logger.info(`${userID} sucessfully subscribed to ${groupname}`)
     return `You are now subscribed to *${groupname}*!`
   } catch (error) {
+    logger.error(`Error adding subscriber ${userID} to group ${groupname}: ${error.message}`)
     return `Error while adding subscriber: ${error.message}`
   }
 }
@@ -258,8 +273,10 @@ async function removeSubscriber (groupname, userID) {
     }
 
     // If the user was initially unsubscribed from the group, do nothing and notify them
+    logger.info(`${userID} sucessfully unsubscribed from ${groupname}`)
     return `You were already unsubscribed from *${groupname}*`
   } catch (error) {
+    logger.error(`Error removing subscriber ${userID} from group ${groupname}: ${error.message}`)
     return `Error while removing subscriber: ${error.message}`
   }
 }

@@ -4,6 +4,12 @@ const database = require('./db')
 const schedule = require('./schedule')
 const helpers = require('./helpers')
 const appHelper = require('./app-helper')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'debug' // setting to this level in prod to help find bugs
+}))
 require('dotenv').config()
 
 // setting up app
@@ -15,11 +21,11 @@ const app = new App({
 
 // Take care of any fatal exceptions and ensure the app doesn't crash
 process.on('unhandledRejection', (reason, p) => {
-  console.error('Unhandled Rejection at:', p, 'reason:', reason)
+  logger.error('Unhandled Rejection at:', p, 'reason:', reason)
 })
 
 process.on('uncaughtException', (error) => {
-  console.error(`Caught exception: ${error}\n` + `Exception origin: ${error.stack}`)
+  logger.error(`Caught exception: ${error}\n` + `Exception origin: ${error.stack}`)
 })
 
 // Define some global variables so they can be recognized by all try/catch blocks
@@ -32,7 +38,7 @@ const eodSent = []
 
 // starting app
 try {
-  app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is currently running!'))
+  app.start(process.env.PORT || 3000).then(logger.info('⚡️ Bolt app is currently running!'))
 
   // determine slash command from dev value
   slashcommand = '/endybot'
@@ -48,7 +54,7 @@ try {
     schedule.startCronJobs(eodSent, allTasks, app, usrList)
   })
 } catch (error) {
-  console.log(`Error starting app: ${error.message}`)
+  logger.error(`Error starting app: ${error.message}`)
 }
 
 try {
@@ -111,7 +117,7 @@ try {
     }
   })
 } catch (error) {
-  console.log(`Error in app.command function: ${error.message}`)
+  logger.error(`Error in app.command function: ${error.message}`)
 }
 
 try {
@@ -139,7 +145,7 @@ try {
     slack.postEODResponse(app, body.view, body.user.id)
   })
 } catch (error) {
-  console.log(`Error in app.view: ${error.message}`)
+  logger.error(`Error in app.view: ${error.message}`)
 }
 
 try {
@@ -168,7 +174,7 @@ try {
     slack.sendEODModal(app, body.trigger_id, groupName)
   })
 } catch (error) {
-  console.log(`Error in app.action: ${error.message}`)
+  logger.error(`Error in app.action: ${error.message}`)
 }
 
 try {
@@ -182,7 +188,7 @@ try {
     appHelper.addUser(usrList, event)
   })
 } catch (error) {
-  console.log(`Error in app.userUpdate: ${error.message}`)
+  logger.error(`Error in app.userUpdate: ${error.message}`)
 }
 
 module.exports = { app }

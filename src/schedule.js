@@ -2,6 +2,12 @@ const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
 const slack = require('./slack')
 const db = require('./db')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'debug' // setting to this level in prod to help find bugs
+}))
 require('node-cron')
 
 let reminderSent
@@ -18,7 +24,7 @@ async function startCronJobs (eodSent, allTasks, app, usrList) {
     }
     return 0
   }
-  console.log('No groups in database, not scheduling anything')
+  logger.info('No groups in database, not scheduling anything')
   return null
 }
 
@@ -39,7 +45,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
     // convert db postTime to cron time
     const cronTime = convertPostTimeToCron(group.postTime)
     if (cronTime == null) {
-      console.log(`Error: cannot add group '${group.name}' to schedule because an invalid time was entered`)
+      logger.warn(`Cannot add group '${group.name}' to schedule because an invalid time was entered`)
       return null
     }
 
@@ -63,7 +69,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i])
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
-        console.log('Error: Unable to schedule task; could not find contributor')
+        logger.error('Unable to schedule task; could not find contributor')
         continue
       }
       // getting index 0 because filter returns a list
@@ -96,7 +102,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       const usrInfo = usrList.filter((usr) => usr.id == group.subscribers[i])
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
-        console.log('Error: Unable to schedule task; could not find subscriber')
+        logger.error('Unable to schedule task; could not find subscriber')
         continue
       }
       // getting index 0 because filter returns a list
@@ -134,7 +140,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
     return 0
   } catch (error) {
-    console.log(`Error while scheduling cron job: ${error.message}`)
+    logger.error(`Error while scheduling cron job: ${error.message}`)
   }
 }
 
@@ -171,7 +177,7 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
     const usrInfo = usrList.filter((usr) => usr.id == subscriber)
     if (usrInfo.length != 1) {
       // unable to locate user, try to add other group memebers
-      console.log('Error: Unable to schedule task; could not find subscriber')
+      logger.error('Unable to schedule task; could not find subscriber')
       return
     }
 
@@ -198,7 +204,7 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
       }
     }
   } catch (error) {
-    console.log(`Error while adding subscriber task: ${error.message}`)
+    logger.error(`Error while adding subscriber task: ${error.message}`)
   }
 }
 
