@@ -16,8 +16,8 @@ metadata:
 
   links:
     - url: https://us-west-1.console.aws.amazon.com/ecs/v2/clusters/endyBot_cluster/services?region=us-west-1
-    - title: AWS Prod Cluster
-    - icon: dashboard
+      title: AWS Prod Cluster
+      icon: dashboard
 
 spec:
   type: service
