@@ -35,6 +35,33 @@ function commandParse (command) {
   }
 }
 
+// Verifies this group's name is unique, then
+// creates the group in the db and schedules its tasks.
+// Returns the message that will be sent to the user to
+// Confirm group creation or notify them of failure
+async function handleGroupCreate (view, user, eodSent, allTasks, app, usrList) {
+  // Parsing the response from the modal into a JSON to send to db
+  const newGroup = slack.parseCreateModal(view)
+
+  // Verifying group name is unique
+  const existGroup = await database.getGroup(newGroup.name)
+
+  if (existGroup !== null) {
+    slack.sendMessage(app, user.id, `Cannot create group: group with name ${newGroup.name} already exists.`)
+    return -1
+  }
+
+  // Send new group info to db
+  const groupID = await database.addToDB(newGroup)
+
+  // Add the new group to the cron scheduler
+  const group = await database.getGroup(undefined, groupID)
+  schedule.scheduleCronJob(eodSent, allTasks, group, app, usrList)
+
+  slack.sendMessage(app, user.id, `Successfully created group ${newGroup.name}.`)
+  return 0
+}
+
 // Stop tasks for a group, delete the group, and notify the subscribers of the group
 // This function is here to support app.js with logic
 async function handleGroupDelete (app, allTasks, groupName, userID) {
@@ -86,4 +113,4 @@ function addUser (usrList, event) {
   usrList.push(event.user)
 }
 
-module.exports = { commandParse, handleGroupDelete, iterateEodSent, updateUser, addUser }
+module.exports = { commandParse, handleGroupCreate, handleGroupDelete, iterateEodSent, updateUser, addUser }
