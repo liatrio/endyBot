@@ -396,4 +396,16 @@ async function eodDmUpdatePost (app, user) {
     console.error(error)
   }
 }
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList }
+
+function sendMessage (app, user, message) {
+  try {
+    app.client.chat.postMessage({
+      channel: user,
+      text: message
+    })
+  } catch (error) {
+    console.error(`Unable to send message to ${user}: ${error}`)
+    return -1
+  }
+}
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList, sendMessage }
