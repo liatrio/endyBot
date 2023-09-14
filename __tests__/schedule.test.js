@@ -25,7 +25,7 @@ describe('schedule.js testing suite', () => {
       const list = [
         {
           group: 'test_group1',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -45,7 +45,7 @@ describe('schedule.js testing suite', () => {
         },
         {
           group: 'test_group2',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -65,7 +65,7 @@ describe('schedule.js testing suite', () => {
         },
         {
           group: 'test_group3',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -283,7 +283,7 @@ describe('schedule.js testing suite', () => {
     const allTasks = [
       {
         group: 'test_group1',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -323,7 +323,7 @@ describe('schedule.js testing suite', () => {
     const list = [
       {
         group: 'test_group1',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -344,7 +344,7 @@ describe('schedule.js testing suite', () => {
       },
       {
         group: 'test_group2',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -365,7 +365,7 @@ describe('schedule.js testing suite', () => {
       },
       {
         group: 'test_group3',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
