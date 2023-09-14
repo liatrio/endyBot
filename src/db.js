@@ -173,7 +173,7 @@ async function describeGroup (groupname) {
     // Display all contributors of the group
     stringedResult += '*Contributors*: '
     for (const user of group.contributors) {
-      stringedResult += `<@${user}>  `
+      stringedResult += `<@${user.name}>  `
     }
 
     // Display all subscribers of the group

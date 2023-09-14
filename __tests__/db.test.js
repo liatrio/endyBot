@@ -16,7 +16,7 @@ describe('group.js testing suite', () => {
     const _group = {
       _id: '64dbee9baf23d8dc32bcbad3',
       name: 'Test Group',
-      contributors: ['UID12345'],
+      contributors: [{ name: 'UID12345' }],
       subscribers: ['UID56789'],
       postTime: 0,
       channel: '#test-channel',
@@ -35,7 +35,7 @@ describe('addToDB function', () => {
   test('should add a group to the database and return its ID', async () => {
     const fakeGroup = {
       name: 'test-group',
-      contributors: ['keoni', 'mikayla', 'carson'],
+      contributors: [{ name: 'keoni' }, { name: 'mikayla' }, { name: 'carson' }],
       subscribers: ['josh'],
       postTime: 5,
       channel: 'fake-channel',
@@ -84,7 +84,7 @@ describe('getGroup function', () => {
     const _group = {
       _id: '64e3e720f3e3e106543a0fbf',
       name: 'Test Group',
-      contributors: ['UID1234']
+      contributors: [{ name: 'UID1234' }]
     }
 
     mockingoose(Group).toReturn(_group, 'findOne')
@@ -102,17 +102,17 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       },
       {
         name: 'Group 2',
-        contributors: ['UID123'],
+        contributors: [{ name: 'UID123' }],
         subscribers: ['SID123']
       },
       {
         name: 'Group 3',
-        contributors: ['UID123', 'UID456', 'UID789'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }, { name: 'UID789' }],
         subscribers: ['SID789']
       }
     ]
@@ -128,7 +128,7 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       }
     ]
@@ -144,7 +144,7 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       }
     ]
@@ -268,7 +268,7 @@ describe('describeGroup testing suite', () => {
   test('Describe existing group', async () => {
     const group = {
       name: 'Group 1',
-      contributors: ['UID123'],
+      contributors: [{ name: 'UID123' }],
       subscribers: ['SID123'],
       postTime: 14,
       channel: 'test-channel'

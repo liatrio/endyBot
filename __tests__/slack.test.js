@@ -84,7 +84,7 @@ describe('slack.js testing suite', () => {
 
       const expected = {
         name: 'Test Group',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123', posted: false }, { name: 'UID456', posted: false }],
         subscribers: ['UID789', 'UID1110'],
         postTime: 1,
         channel: 'CHID123',

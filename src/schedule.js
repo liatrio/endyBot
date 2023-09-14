@@ -60,7 +60,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
     for (let i = 0; i < group.contributors.length; i++) {
       // get timezone
-      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i])
+      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i].name)
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
         console.log('Error: Unable to schedule task; could not find contributor')

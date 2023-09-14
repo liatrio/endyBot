@@ -181,9 +181,23 @@ function parseCreateModal (view) {
   try {
     const rawTime = view.state.values.create_time.group_create_time.selected_time
     const time = Number(rawTime.substring(0, 2))
+
+    // creating contributor objects
+    const contribs = []
+
+    for (let i = 0; i < view.state.values.contributors.group_create_contributors.selected_users.length; i++) {
+      const thisObj = {
+        name: '',
+        posted: false
+      }
+
+      thisObj.name = view.state.values.contributors.group_create_contributors.selected_users[i]
+      contribs.push(thisObj)
+    }
+
     const newGroup = {
       name: view.state.values.group_name.group_create_name.value,
-      contributors: view.state.values.contributors.group_create_contributors.selected_users,
+      contributors: contribs,
       subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
       postTime: time,
       channel: view.state.values.channel.group_create_channel.selected_channel,
