@@ -476,6 +476,18 @@ describe('slack.js testing suite', () => {
       expect(res).toStrictEqual(Error('Unable to get user list'))
     })
   })
+
+  describe('sendMessage tests', () => {
+    test('Successful send', () => {
+      expect(slack.sendMessage).not.toThrow()
+    })
+
+    test('Error sending', () => {
+      const app = new App()
+      app.client.chat.postMessage.mockRejectedValue(new Error())
+      expect(slack.sendMessage()).toEqual(-1)
+    })
+  })
 })
 
 describe('notifySubsAboutGroupDeletion testing suite', () => {

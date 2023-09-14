@@ -148,3 +148,21 @@ describe('addUser tests', () => {
     expect(usrList[2]).toStrictEqual(event.user)
   })
 })
+
+describe('handleGroupCreate tests', () => {
+  test('Same group name', async () => {
+    slack.parseCreateModal.mockResolvedValue({ name: 'ex' })
+    db.getGroup.mockResolvedValueOnce({ name: 'ex' })
+
+    const res = await appHelper.handleGroupCreate('', { id: '' }, [], [], '', [])
+    expect(res).toStrictEqual(-1)
+  })
+
+  test('Different group name', async () => {
+    slack.parseCreateModal.mockResolvedValue({ name: 'ex' })
+    db.getGroup.mockResolvedValueOnce(null)
+
+    const res = await appHelper.handleGroupCreate('', { id: '' }, [], [], '', [])
+    expect(res).toStrictEqual(0)
+  })
+})

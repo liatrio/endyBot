@@ -116,18 +116,10 @@ try {
 
 try {
   // listen for response from create-group-view modal
-  app.view('create-group-view', async ({ view, ack }) => {
+  app.view('create-group-view', async ({ view, body, ack }) => {
     await ack()
 
-    // Parsing the response from the modal into a JSON to send to db
-    const newGroup = slack.parseCreateModal(view)
-
-    // Send new group info to db
-    const groupID = await database.addToDB(newGroup)
-
-    // Add the new group to the cron scheduler
-    const group = await database.getGroup(undefined, groupID)
-    schedule.scheduleCronJob(eodSent, allTasks, group, app, usrList)
+    appHelper.handleGroupCreate(view, body.user, eodSent, allTasks, app, usrList)
   })
 
   // listen for response from EOD-response modal

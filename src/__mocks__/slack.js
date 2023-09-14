@@ -12,5 +12,6 @@ module.exports = {
   notifySubsAboutGroupDeletion: jest.fn(() => Promise.resolve()),
   getUserList: jest.fn(() => Promise.resolve()),
   eodDmUpdateDelete: jest.fn(() => Promise.resolve()),
-  eodDmUpdatePost: jest.fn(() => Promise.resolve())
+  eodDmUpdatePost: jest.fn(() => Promise.resolve()),
+  sendMessage: jest.fn(() => Promise.resolve())
 }
