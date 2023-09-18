@@ -187,7 +187,8 @@ function parseCreateModal (view) {
       subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
       postTime: time,
       channel: view.state.values.channel.group_create_channel.selected_channel,
-      ts: ''
+      ts: '',
+      posted: false
     }
 
     return newGroup
@@ -268,6 +269,17 @@ async function postEODResponse (app, view, uid) {
     const errorMsg = `Group ${groupName} not found.`
     console.log(`Error positng EOD response: ${errorMsg}`)
     return Error(errorMsg)
+  }
+
+  // check if the thread has been posted today
+  if (group.posted === false) {
+    // post thread
+    try {
+      const ts = await createPost(app, group)
+      await db.updatePosted(group, ts)
+    } catch (error) {
+      console.log(`Unable to create EOD thread for group ${group.name}: ${error}`)
+    }
   }
 
   // construct the response block

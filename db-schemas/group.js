@@ -17,7 +17,8 @@ const groupSchema = Schema({
   subscribers: [String],
   postTime: Number,
   channel: String,
-  ts: String
+  ts: String,
+  posted: Boolean
 })
 
 const Group = mongoose.model('Group', groupSchema)

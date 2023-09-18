@@ -9,10 +9,10 @@ Immortal Hedgehogs Hello DevOps project. endyBot is an EOD post manager that ens
 endyBot creates and manages end of day "groups", where each group is given a name, a list of contirbutors, a list of subscribers, a time at which to post the EOD master thread and notify contributors, and a channel in which to post end of day threads. 
 
 ### Notification Time
-This is perhaps the most complicated part of endyBot. When a user creates a group, they are prompted to select a notification time. This is the time at which endyBot will both notify users and post the EOD thread parent message. The time at which the thread post is made is at the notification time in **Eastern Standard Time**, and each contributor is reminded to make their EOD post at the notification time in **their timezone as indicated on their Slack profile**. 
+When a user creates a group, they are prompted to select a notification time. This is the time at which endyBot will notify users in **their timezone as indicated on their Slack profile**.
 
 ### Contributors
-The contributors list is an array of the Slack IDs of each user who should contribute to an EOD post. They will receive messages from endyBot at their group's notification time. This message will contain a button which, on click, will open a modal that the contributor can fill out with their EOD summary. Once this submission is complete, endyBot will post a copy of the contributor's responses as a reply to the original EOD thread post it created, corresponding to the group this contributor is filling out this post for.
+The contributors list is an array of the Slack IDs of each user who should contribute to an EOD post. They will receive messages from endyBot at their group's notification time. This message will contain a button which, on click, will open a modal that the contributor can fill out with their EOD summary. Once this submission is complete, endyBot will post a copy of the contributor's responses as a reply to that group's EOD thread for the day. If this response is the first one for that group in a day, endyBot will create the new thread, then post the response as a reply.
 
 ### Subscribers 
 Similarly to contributors, the subscribers list is an array of the Slack IDs of each user that is subscribed to a given group. At 8PM **their timezone**, subscribers will receive a link to the end of day thread for each group they're subscribed to. 
