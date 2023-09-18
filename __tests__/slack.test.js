@@ -133,7 +133,8 @@ describe('slack.js testing suite', () => {
 
     test('Successfully sent conributor a DM', async () => {
       const group = {
-        name: 'test'
+        name: 'test',
+        contributors: [{ name: 'U1234556', posted: false }]
       }
 
       const expected = {
@@ -142,7 +143,7 @@ describe('slack.js testing suite', () => {
         uid: 'U1234556'
       }
       mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
-      const result = await slack.dmUsers(mockApp, group.name, expected.uid)
+      const result = await slack.dmUsers(mockApp, group, expected.uid)
       expect(result).toStrictEqual(expected)
     })
 
@@ -156,6 +157,15 @@ describe('slack.js testing suite', () => {
       const user = 'UID123'
       const result = await slack.dmUsers(mockApp, group, user)
       expect(result).toEqual(null)
+    })
+
+    test('Skip posted', async () => {
+      const group = {
+        contributors: [{ name: 'UID123', posted: true }]
+      }
+
+      slack.dmUsers(mockApp, group, 'UID123')
+      expect(mockApp.client.chat.postMessage).not.toHaveBeenCalled()
     })
   })
 
@@ -358,7 +368,7 @@ describe('slack.js testing suite', () => {
       })
 
       await slack.postEODResponse(mockApp, view, '1234')
-      expect(db.updatePosted).toHaveBeenCalled()
+      expect(db.updateGroupPosted).toHaveBeenCalled()
     })
 
     test('Don\'t spin off thread if one already exists', async () => {
@@ -369,7 +379,7 @@ describe('slack.js testing suite', () => {
       })
 
       await slack.postEODResponse(mockApp, view, '1234')
-      expect(db.updatePosted).not.toHaveBeenCalled()
+      expect(db.updateGroupPosted).not.toHaveBeenCalled()
     })
   })
 
@@ -513,6 +523,19 @@ describe('slack.js testing suite', () => {
       const app = new App()
       app.client.chat.postMessage.mockRejectedValue(new Error())
       expect(slack.sendMessage()).toEqual(-1)
+    })
+  })
+
+  describe('sendHomeView test', () => {
+    test('Sent fine', async () => {
+      expect(slack.sendHomeView).not.toThrow()
+    })
+
+    test('Error', async () => {
+      const mockApp = new App()
+      mockApp.client.views.publish.mockRejectedValue()
+      const res = await slack.sendHomeView(mockApp, '', '')
+      expect(res).toEqual(-1)
     })
   })
 })

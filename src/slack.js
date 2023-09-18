@@ -37,6 +37,13 @@ async function dmUsers (app, group, user) {
     console.log('null user')
     return user
   }
+  // check if user has already posted today
+  for (let i = 0; i < group.contributors.length; i++) {
+    if (group.contributors[i].name == user && (group.contributors[i].posted)) {
+      console.log(`User ${user} has already posted today, skipping.`)
+      return null
+    }
+  }
   let message
   try {
     const res = await app.client.chat.postMessage({
@@ -212,8 +219,14 @@ function parseCreateModal (view) {
   }
 }
 
-async function sendEODModal (app, triggerId, groupName) {
-  const modal = views.eodDefault
+async function sendEODModal (app, triggerId, groupName, userID) {
+  const userPosted = await db.checkUserPosted(userID, groupName)
+  let modal
+  if (userPosted) {
+    modal = views.alreadyPosted
+  } else {
+    modal = views.eodDefault
+  }
   modal.private_metadata = groupName
   const res = await app.client.views.open({
     trigger_id: triggerId,
@@ -290,7 +303,7 @@ async function postEODResponse (app, view, uid) {
     // post thread
     try {
       const ts = await createPost(app, group)
-      await db.updatePosted(group, ts)
+      await db.updateGroupPosted(group, ts)
     } catch (error) {
       console.log(`Unable to create EOD thread for group ${group.name}: ${error}`)
     }
@@ -434,4 +447,17 @@ function sendMessage (app, user, message) {
     return -1
   }
 }
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList, sendMessage }
+
+async function sendHomeView (app, user, view) {
+  try {
+    await app.client.views.publish({
+      user_id: user,
+      view
+    })
+  } catch (error) {
+    console.log(`Error sending home view: ${error}`)
+    return -1
+  }
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList, sendMessage, sendHomeView }
