@@ -24,7 +24,7 @@ async function startCronJobs (eodSent, allTasks, app, usrList) {
 
 /**
  * Schedules all necessary tasks for a group and adds an entry to allTasks containing the group name,
- * the thread creation task, a list of contributor tasks, and a list of subscriber tasks
+ * the reset posted task, a list of contributor tasks, and a list of subscriber tasks
  * @param {Array} allTasks
  * @param {Group_Entry} group
  * @param {Bolt_App} app
@@ -43,16 +43,11 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       return null
     }
 
-    // Scheduling the thread post
-    const threadTask = cron.schedule(cronTime, async () => {
-      // create the thread
-      const ts = await slack.createPost(app, group)
-
-      // update the DB entry with thread's ts
-      group.ts = ts
-      await group.save()
+    // Scheduling task to reset the "posted" variable
+    const resetTask = cron.schedule('0 23 * * 1-5', async () => {
+      db.updatePosted(group)
     }, {
-      timezone: 'America/New_York' // EST
+      timezone: 'America/Los_Angeles' // PST-- Setting it to this to try to limitt cases of late-night EOD posts going to the wrong thread
     })
 
     // Scheduling the contriutor reminders
@@ -124,7 +119,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
     // create an entry for the allTasks array that bundles the group with its 2 specific cron jobs
     const entry = {
       group: group.name,
-      threadTask,
+      resetTask,
       contribTasks,
       subTasks
     }
@@ -143,7 +138,7 @@ function removeAllTasks (allTasks, groupName) {
   let i = 0
   for (const entry of allTasks) {
     if (entry.group === groupName) {
-      entry.threadTask.stop()
+      entry.resetTask.stop()
       // loop to stop all contributor tasks
       for (const singleEod of entry.contribTasks) {
         singleEod.task.stop()

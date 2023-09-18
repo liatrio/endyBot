@@ -88,7 +88,8 @@ describe('slack.js testing suite', () => {
         subscribers: ['UID789', 'UID1110'],
         postTime: 1,
         channel: 'CHID123',
-        ts: ''
+        ts: '',
+        posted: false
       }
 
       const res = slack.parseCreateModal(completeView)
@@ -110,7 +111,7 @@ describe('slack.js testing suite', () => {
         name: 'test group'
       }
 
-      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234.5678' })
+      mockApp.client.chat.postMessage.mockResolvedValue({ ts: '1234.5678' })
       const res = await slack.createPost(mockApp, mockGroup)
       expect(res).toBe('1234.5678')
     })
@@ -280,6 +281,10 @@ describe('slack.js testing suite', () => {
   })
 
   describe('postEODResponse test', () => {
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
     const mockApp = new App({})
 
     // mocking view
@@ -343,6 +348,28 @@ describe('slack.js testing suite', () => {
       const res = await slack.postEODResponse(mockApp, view, '1234')
 
       expect(res).toEqual(expectedRes)
+    })
+
+    test('Spin off thread if one doesn\'t exist', async () => {
+      db.getGroup.mockResolvedValue({
+        channel: '1234',
+        ts: '1234',
+        posted: false
+      })
+
+      await slack.postEODResponse(mockApp, view, '1234')
+      expect(db.updatePosted).toHaveBeenCalled()
+    })
+
+    test('Don\'t spin off thread if one already exists', async () => {
+      db.getGroup.mockResolvedValue({
+        channel: '1234',
+        ts: '1234',
+        posted: true
+      })
+
+      await slack.postEODResponse(mockApp, view, '1234')
+      expect(db.updatePosted).not.toHaveBeenCalled()
     })
   })
 

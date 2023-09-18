@@ -264,4 +264,28 @@ async function removeSubscriber (groupname, userID) {
   }
 }
 
-module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber }
+/**
+ * Updates the posted varaible in a group. If ts is provided, posted is set to true. If no ts is provided, posted is set to false.
+ * @param {JSON} group
+ * @param {String} ts
+ * @returns The updated group object on success, and null on failure
+ */
+async function updatePosted (group, ts) {
+  try {
+    if (!ts) {
+      group.posted = false
+      const res = await group.save()
+      return res
+    }
+
+    group.ts = ts
+    group.posted = true
+    const res = await group.save()
+    return res
+  } catch (error) {
+    console.log(`Error updating posted for group ${group.name}: ${error}`)
+    return null
+  }
+}
+
+module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber, updatePosted }

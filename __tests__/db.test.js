@@ -286,3 +286,50 @@ describe('describeGroup testing suite', () => {
     expect(result).toBe('No group exists with name *bad group name*')
   })
 })
+
+describe('updatePosted testing suite', () => {
+  test('No ts', async () => {
+    const group = {
+      posted: true,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve(group))
+    }
+
+    const expected = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve())
+    }
+
+    const res = await db.updatePosted(group)
+    expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
+  })
+
+  test('With ts', async () => {
+    const group = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve(group))
+    }
+
+    const expected = {
+      posted: true,
+      ts: '5678',
+      save: jest.fn(() => Promise.resolve())
+    }
+
+    const res = await db.updatePosted(group, '5678')
+    expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
+  })
+
+  test('Error', async () => {
+    const group = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.reject(new Error('Test error')))
+    }
+
+    const res = await db.updatePosted(group)
+    expect(res).toBeNull()
+  })
+})
