@@ -287,7 +287,119 @@ describe('describeGroup testing suite', () => {
   })
 })
 
-describe('updatePosted testing suite', () => {
+describe('getUserGroups testing suite', () => {
+  test('Unable to find group', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.getUserGroups('')
+    expect(res).toEqual([])
+  })
+
+  test('Found groups, user in none', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID123' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID456')
+    expect(res).toEqual([])
+  })
+
+  test('Found groups, user in one', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      },
+      {
+        contributors: [{ name: 'UID456' }]
+      }
+    ]
+
+    const expected = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID123')
+    expect(res.contributors).toEqual(expected.contributors)
+  })
+
+  test('Found groups, user in all', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      },
+      {
+        contributors: [{ name: 'UID456' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID456')
+    expect(res.length).toEqual(mockGroups.length)
+  })
+})
+
+describe('checkUserPosted testing suite', () => {
+  const mockGroups = [
+    {
+      name: 'Group1',
+      contributors: [{ name: 'U123', posted: true },
+        { name: 'U456', posted: false }]
+    }
+  ]
+
+  test('User posted', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U123', 'Group1')
+    expect(res).toBe(true)
+  })
+
+  test('User hasn\'t posted', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U456', 'Group1')
+    expect(res).toBe(false)
+  })
+
+  test('User not in group', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U789', 'Group1')
+    expect(res).toEqual(-1)
+  })
+
+  test('Group not found', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.checkUserPosted('U123', 'Group2')
+    expect(res).toEqual(-1)
+  })
+})
+
+describe('updateUserPosted testing suite', () => {
+  const mockGroups = [
+    {
+      name: 'Group1',
+      contributors: [{ name: 'U123', posted: true },
+        { name: 'U456', posted: false }]
+    }
+  ]
+
+  test('Group Found', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.updateUserPosted('U123', 'Group1', true)
+    expect(res).toEqual(0)
+  })
+
+  test('Group Not Found', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.updateUserPosted('U123', 'Group2', true)
+    expect(res).toEqual(-1)
+  })
+})
+
+describe('updateGroupPosted testing suite', () => {
   test('No ts', async () => {
     const group = {
       posted: true,
@@ -301,7 +413,7 @@ describe('updatePosted testing suite', () => {
       save: jest.fn(() => Promise.resolve())
     }
 
-    const res = await db.updatePosted(group)
+    const res = await db.updateGroupPosted(group)
     expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
   })
 
@@ -318,7 +430,7 @@ describe('updatePosted testing suite', () => {
       save: jest.fn(() => Promise.resolve())
     }
 
-    const res = await db.updatePosted(group, '5678')
+    const res = await db.updateGroupPosted(group, '5678')
     expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
   })
 
@@ -329,7 +441,7 @@ describe('updatePosted testing suite', () => {
       save: jest.fn(() => Promise.reject(new Error('Test error')))
     }
 
-    const res = await db.updatePosted(group)
+    const res = await db.updateGroupPosted(group)
     expect(res).toBeNull()
   })
 })
