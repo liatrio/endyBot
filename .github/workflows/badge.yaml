@@ -1,6 +1,7 @@
 name: Update Coverage Badge
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -19,19 +20,7 @@ jobs:
         run: npm install
 
       - name: Get the coverage
-        run: |
-            chmod +x scripts/get-coverage.sh
-            echo "COVERAGE=$(./scripts/get-coverage.sh 2>/dev/null)" >> $GITHUB_ENV
+        run: npm run test
 
-      - name: Create new coverage badge
-        uses: schneegans/dynamic-badges-action@v1.3.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-# The following line is not sensitive information. Just points to a Gist
-          gistID: 63bc4aeca2dedc9ee2c05ee997adc7fa
-          filename: coverage.json
-          label: Code Coverage
-          message: ${{ env.COVERAGE }}
-          valColorRange: ${{ env.COVERAGE }}
-          maxColorRange: 100
-          minColorRange: 50
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
