@@ -1,9 +1,7 @@
 name: Update Coverage Badge
 
 on:
-  push:
-    branches:
-      - test-badge
+  pull_request:
   workflow_dispatch:
   workflow_call:
 
