@@ -3,7 +3,8 @@ module.exports = {
   // Add any other Jest configuration options here as needed
 
   collectCoverage: true,
-  coverageReporters: ['lcov', 'text-summary'],
+  // coverageReporters: ['lcov', 'text-summary'],
+  coverageReporters: ['text', 'cobertura'],
   testPathIgnorePatterns: ['./src/app.js'],
   coverageThreshold: {
     global: {
