@@ -391,4 +391,27 @@ const eodBoth = {
   ]
 }
 
-module.exports = { groupCreate, eodDefault, eodBlockers, eodNotes, eodBoth }
+const alreadyPosted = {
+  type: 'modal',
+  title: {
+    type: 'plain_text',
+    text: 'Cannot Make EOD Post',
+    emoji: true
+  },
+  close: {
+    type: 'plain_text',
+    text: 'Ok',
+    emoji: true
+  },
+  blocks: [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'You have already made your EOD post for this group today!'
+      }
+    }
+  ]
+}
+
+module.exports = { groupCreate, eodDefault, eodBlockers, eodNotes, eodBoth, alreadyPosted }

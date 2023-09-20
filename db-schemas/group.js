@@ -13,7 +13,7 @@ const Schema = mongoose.Schema
  */
 const groupSchema = Schema({
   name: String,
-  contributors: [String],
+  contributors: [JSON],
   subscribers: [String],
   postTime: Number,
   channel: String,

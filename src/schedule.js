@@ -43,9 +43,12 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       return null
     }
 
-    // Scheduling task to reset the "posted" variable
-    const resetTask = cron.schedule('0 23 * * 1-5', async () => {
-      db.updatePosted(group)
+    // Scheduling task to reset the "posted" variable for the group and each contributor
+    const resetTask = cron.schedule('59 23 * * 1-5', async () => {
+      db.updateGroupPosted(group)
+      for (let i = 0; i < group.contributors.length; i++) {
+        db.updateUserPosted(group.contributors[i].name, group.name, false)
+      }
     }, {
       timezone: 'America/Los_Angeles' // PST-- Setting it to this to try to limitt cases of late-night EOD posts going to the wrong thread
     })
@@ -55,7 +58,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
     for (let i = 0; i < group.contributors.length; i++) {
       // get timezone
-      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i])
+      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i].name)
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
         console.log('Error: Unable to schedule task; could not find contributor')
