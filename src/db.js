@@ -333,7 +333,7 @@ async function checkUserPosted (UID, groupName) {
 
     return -1
   } catch (error) {
-    console.log(`Error checking if user posted: ${error}`)
+    logger.error(`Error checking if user posted: ${error}`)
     return -1
   }
 }
@@ -356,7 +356,7 @@ async function updateUserPosted (user, groupName, posted) {
       }
     }
   } catch (error) {
-    console.log(`Unable to update posted status for user ${user} in group ${groupName}: ${error}`)
+    logger.error(`Unable to update posted status for user ${user} in group ${groupName}: ${error}`)
     return -1
   }
   return 0
@@ -381,7 +381,7 @@ async function updateGroupPosted (group, ts) {
     const res = await group.save()
     return res
   } catch (error) {
-    console.log(`Error updating posted for group ${group.name}: ${error}`)
+    logger.error(`Error updating posted for group ${group.name}: ${error}`)
     return null
   }
 }

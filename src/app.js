@@ -194,7 +194,7 @@ try {
     slack.sendHomeView(app, event.user, view)
   })
 } catch (error) {
-  console.log(`Error creating home view: ${error}`)
+  logger.error(`Error creating home view: ${error}`)
 }
 
 module.exports = { app }

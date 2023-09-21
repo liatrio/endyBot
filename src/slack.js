@@ -45,7 +45,7 @@ async function dmUsers (app, group, user) {
   // check if user has already posted today
   for (let i = 0; i < group.contributors.length; i++) {
     if (group.contributors[i].name == user && (group.contributors[i].posted)) {
-      console.log(`User ${user} has already posted today, skipping.`)
+      logger.error(`User ${user} has already posted today, skipping.`)
       return null
     }
   }
@@ -97,15 +97,15 @@ async function dmUsers (app, group, user) {
  */
 async function validateInput (group, threadID) {
   if (!group.subscribers.length) {
-    console.log('group length is 0')
+    logger.warn('group length is 0')
     return 1
   }
   if (!group.channel) {
-    console.log('group channel is a null object')
+    logger.warn('group channel is a null object')
     return 2
   }
   if (!threadID) {
-    console.log('thread id is null')
+    logger.warn('thread id is null')
     return 3
   }
   return 0
@@ -261,7 +261,7 @@ function updateEODModal (app, body, toAdd) {
       targetView += 4
       break
     default:
-      console.log('Attempting to add invalid block')
+      logger.warn('Attempting to add invalid block')
       return -1
   }
 
@@ -309,7 +309,7 @@ async function postEODResponse (app, view, uid) {
       const ts = await createPost(app, group)
       await db.updateGroupPosted(group, ts)
     } catch (error) {
-      console.log(`Unable to create EOD thread for group ${group.name}: ${error}`)
+      logger.error(`Unable to create EOD thread for group ${group.name}: ${error}`)
     }
   }
 
@@ -458,7 +458,7 @@ async function sendHomeView (app, user, view) {
       view
     })
   } catch (error) {
-    console.log(`Error sending home view: ${error}`)
+    logger.error(`Error sending home view: ${error}`)
     return -1
   }
 }
