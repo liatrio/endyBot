@@ -84,11 +84,12 @@ describe('slack.js testing suite', () => {
 
       const expected = {
         name: 'Test Group',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123', posted: false }, { name: 'UID456', posted: false }],
         subscribers: ['UID789', 'UID1110'],
         postTime: 1,
         channel: 'CHID123',
-        ts: ''
+        ts: '',
+        posted: false
       }
 
       const res = slack.parseCreateModal(completeView)
@@ -110,7 +111,7 @@ describe('slack.js testing suite', () => {
         name: 'test group'
       }
 
-      mockApp.client.chat.postMessage = jest.fn().mockResolvedValue({ ts: '1234.5678' })
+      mockApp.client.chat.postMessage.mockResolvedValue({ ts: '1234.5678' })
       const res = await slack.createPost(mockApp, mockGroup)
       expect(res).toBe('1234.5678')
     })
@@ -132,7 +133,8 @@ describe('slack.js testing suite', () => {
 
     test('Successfully sent conributor a DM', async () => {
       const group = {
-        name: 'test'
+        name: 'test',
+        contributors: [{ name: 'U1234556', posted: false }]
       }
 
       const expected = {
@@ -141,7 +143,7 @@ describe('slack.js testing suite', () => {
         uid: 'U1234556'
       }
       mockApp.client.chat.postMessage = jest.fn().mockResolvedValue(expected)
-      const result = await slack.dmUsers(mockApp, group.name, expected.uid)
+      const result = await slack.dmUsers(mockApp, group, expected.uid)
       expect(result).toStrictEqual(expected)
     })
 
@@ -155,6 +157,15 @@ describe('slack.js testing suite', () => {
       const user = 'UID123'
       const result = await slack.dmUsers(mockApp, group, user)
       expect(result).toEqual(null)
+    })
+
+    test('Skip posted', async () => {
+      const group = {
+        contributors: [{ name: 'UID123', posted: true }]
+      }
+
+      slack.dmUsers(mockApp, group, 'UID123')
+      expect(mockApp.client.chat.postMessage).not.toHaveBeenCalled()
     })
   })
 
@@ -280,6 +291,10 @@ describe('slack.js testing suite', () => {
   })
 
   describe('postEODResponse test', () => {
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
     const mockApp = new App({})
 
     // mocking view
@@ -343,6 +358,28 @@ describe('slack.js testing suite', () => {
       const res = await slack.postEODResponse(mockApp, view, '1234')
 
       expect(res).toEqual(expectedRes)
+    })
+
+    test('Spin off thread if one doesn\'t exist', async () => {
+      db.getGroup.mockResolvedValue({
+        channel: '1234',
+        ts: '1234',
+        posted: false
+      })
+
+      await slack.postEODResponse(mockApp, view, '1234')
+      expect(db.updateGroupPosted).toHaveBeenCalled()
+    })
+
+    test('Don\'t spin off thread if one already exists', async () => {
+      db.getGroup.mockResolvedValue({
+        channel: '1234',
+        ts: '1234',
+        posted: true
+      })
+
+      await slack.postEODResponse(mockApp, view, '1234')
+      expect(db.updateGroupPosted).not.toHaveBeenCalled()
     })
   })
 
@@ -474,6 +511,31 @@ describe('slack.js testing suite', () => {
       const res = await slack.getUserList(mockApp)
 
       expect(res).toStrictEqual(Error('Unable to get user list'))
+    })
+  })
+
+  describe('sendMessage tests', () => {
+    test('Successful send', () => {
+      expect(slack.sendMessage).not.toThrow()
+    })
+
+    test('Error sending', () => {
+      const app = new App()
+      app.client.chat.postMessage.mockRejectedValue(new Error())
+      expect(slack.sendMessage()).toEqual(-1)
+    })
+  })
+
+  describe('sendHomeView test', () => {
+    test('Sent fine', async () => {
+      expect(slack.sendHomeView).not.toThrow()
+    })
+
+    test('Error', async () => {
+      const mockApp = new App()
+      mockApp.client.views.publish.mockRejectedValue()
+      const res = await slack.sendHomeView(mockApp, '', '')
+      expect(res).toEqual(-1)
     })
   })
 })

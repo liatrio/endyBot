@@ -122,27 +122,23 @@ try {
 
 try {
   // listen for response from create-group-view modal
-  app.view('create-group-view', async ({ view, ack }) => {
+  app.view('create-group-view', async ({ view, body, ack }) => {
     await ack()
 
-    // Parsing the response from the modal into a JSON to send to db
-    const newGroup = slack.parseCreateModal(view)
-
-    // Send new group info to db
-    const groupID = await database.addToDB(newGroup)
-
-    // Add the new group to the cron scheduler
-    const group = await database.getGroup(undefined, groupID)
-    schedule.scheduleCronJob(eodSent, allTasks, group, app, usrList)
+    appHelper.handleGroupCreate(view, body.user, eodSent, allTasks, app, usrList)
   })
 
   // listen for response from EOD-response modal
   app.view('EOD-response', async ({ body, ack }) => {
     await ack()
+
     appHelper.iterateEodSent(app, eodSent, body)
 
     // handle response from EOD modal here
     slack.postEODResponse(app, body.view, body.user.id)
+
+    // update contributors "posted" status for the day
+    await database.updateUserPosted(body.user.id, body.view.private_metadata, true)
   })
 } catch (error) {
   logger.error(`Error in app.view: ${error.message}`)
@@ -168,10 +164,10 @@ try {
     await ack()
 
     // parse the group name from the message
-    const groupName = helpers.groupNameFromMessage(body.message.text)
+    const groupName = helpers.groupNameFromMessage(body)
 
     // open the EOD modal
-    slack.sendEODModal(app, body.trigger_id, groupName)
+    slack.sendEODModal(app, body.trigger_id, groupName, body.user.id)
   })
 } catch (error) {
   logger.error(`Error in app.action: ${error.message}`)
@@ -189,6 +185,16 @@ try {
   })
 } catch (error) {
   logger.error(`Error in app.userUpdate: ${error.message}`)
+}
+
+try {
+  // constructing and sending the home view when user opens the home page
+  app.event('app_home_opened', async ({ event }) => {
+    const view = await helpers.constructHomeView(event.user)
+    slack.sendHomeView(app, event.user, view)
+  })
+} catch (error) {
+  console.log(`Error creating home view: ${error}`)
 }
 
 module.exports = { app }

@@ -25,7 +25,7 @@ describe('schedule.js testing suite', () => {
       const list = [
         {
           group: 'test_group1',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -45,7 +45,7 @@ describe('schedule.js testing suite', () => {
         },
         {
           group: 'test_group2',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -65,7 +65,7 @@ describe('schedule.js testing suite', () => {
         },
         {
           group: 'test_group3',
-          threadTask: {
+          resetTask: {
             stop: jest.fn()
           },
           contribTasks: [
@@ -93,7 +93,7 @@ describe('schedule.js testing suite', () => {
     test('Handle cron job setup from single group in DB', async () => {
       const groups = [{
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UIS789'],
         postTime: 16,
         channel: 'CID123'
@@ -109,14 +109,14 @@ describe('schedule.js testing suite', () => {
     test('Handle cron job setup from multiple groups in DB', async () => {
       const groups = [{
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UIS789'],
         postTime: 16,
         channel: 'CID123'
       },
       {
         name: 'Group 2',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UIS789'],
         postTime: 16,
         channel: 'CID123'
@@ -145,7 +145,7 @@ describe('schedule.js testing suite', () => {
       // mock group
       const group = {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UID789'],
         postTime: 16,
         channel: 'CID123'
@@ -181,7 +181,7 @@ describe('schedule.js testing suite', () => {
       // mock group
       const group = {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UIS789'],
         postTime: 16,
         channel: 'CID123'
@@ -214,7 +214,7 @@ describe('schedule.js testing suite', () => {
     test('Skip adding a group with invalid time to schedule', async () => {
       const group = {
         name: 'Group 2',
-        contributors: ['UID123'],
+        contributors: [{ name: 'UID123' }],
         subscribers: ['UIS789'],
         postTime: 25,
         channel: 'CID123'
@@ -239,7 +239,7 @@ describe('schedule.js testing suite', () => {
       // mock group
       const group = {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['UIS789'],
         postTime: 16,
         channel: 'CID123'
@@ -283,7 +283,7 @@ describe('schedule.js testing suite', () => {
     const allTasks = [
       {
         group: 'test_group1',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -323,7 +323,7 @@ describe('schedule.js testing suite', () => {
     const list = [
       {
         group: 'test_group1',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -344,7 +344,7 @@ describe('schedule.js testing suite', () => {
       },
       {
         group: 'test_group2',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [
@@ -365,7 +365,7 @@ describe('schedule.js testing suite', () => {
       },
       {
         group: 'test_group3',
-        threadTask: {
+        resetTask: {
           stop: jest.fn()
         },
         contribTasks: [

@@ -1,22 +1,96 @@
 /* eslint-env jest */
 const helpers = require('../src/helpers')
+const db = require('../src/db')
+jest.mock('../src/db')
 
 describe('groupNameFromMessage tests', () => {
-  test('Normal usage', () => {
-    const message = 'It\'s time to write your EOD posts for *:immortal-hedgehogs:!* Begin EOD Post button'
-    const res = helpers.groupNameFromMessage(message)
+  test('Normal usage - message', () => {
+    const body = {
+      container: {
+        type: 'message'
+      },
+      message: {
+        text: 'It\'s time to write your EOD posts for *:immortal-hedgehogs:!* Begin EOD Post button'
+      }
+    }
+    const res = helpers.groupNameFromMessage(body)
     expect(res).toEqual(':immortal-hedgehogs:')
   })
 
-  test('Empty group name', () => {
-    const message = 'It\'s time to write your EOD posts for *!* Begin EOD Post button'
-    const res = helpers.groupNameFromMessage(message)
+  test('Empty group name - message', () => {
+    const body = {
+      container: {
+        type: 'message'
+      },
+      message: {
+        text: 'It\'s time to write your EOD posts for ** Begin EOD Post button'
+      }
+    }
+    const res = helpers.groupNameFromMessage(body)
     expect(res).toEqual(-1)
   })
 
-  test('Invalid message format', () => {
-    const message = 'It\'s time to write your EOD posts for *'
-    const res = helpers.groupNameFromMessage(message)
+  test('Invalid message format - message', () => {
+    const body = {
+      container: {
+        type: 'message'
+      },
+      message: {
+        text: 'It\'s time to write your EOD posts for *'
+      }
+    }
+    const res = helpers.groupNameFromMessage(body)
+    expect(res).toEqual(-1)
+  })
+
+  test('Normal usage - view', () => {
+    const body = {
+      container: {
+        type: 'view'
+      },
+      actions: [
+        {
+          text: {
+            text: 'write :immortal-hedgehogs: eod post'
+          }
+        }
+      ]
+    }
+    const res = helpers.groupNameFromMessage(body)
+    expect(res).toEqual(':immortal-hedgehogs:')
+  })
+
+  test('Empty group name - view', () => {
+    const body = {
+      container: {
+        type: 'view'
+      },
+      actions: [
+        {
+          text: {
+            text: 'write eod post'
+          }
+        }
+      ]
+    }
+    const res = helpers.groupNameFromMessage(body)
+    expect(res).toEqual(-1)
+  })
+
+  test('Invalid message format - view', () => {
+    const body = {
+      container: {
+        type: 'view'
+      },
+      actions: [
+        {
+          text: {
+            text: 'write post'
+          }
+        }
+      ]
+    }
+    const res = helpers.groupNameFromMessage(body)
     expect(res).toEqual(-1)
   })
 })
@@ -307,5 +381,145 @@ describe('formatEODResponse', () => {
     const res = helpers.formatEODResponse(values, uid)
 
     expect(res).toStrictEqual(expectedBlock)
+  })
+})
+
+describe('constructHomeView', () => {
+  test('User in one group', async () => {
+    const expected = {
+      type: 'home',
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'Your EOD Groups',
+            emoji: true
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'group1'
+          },
+          accessory: {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'Write group1 EOD Post',
+              emoji: true
+            },
+            action_id: 'write_eod'
+          }
+        }
+      ]
+    }
+
+    db.getUserGroups.mockResolvedValue([
+      {
+        name: 'group1'
+      }
+    ])
+
+    const res = await helpers.constructHomeView('')
+    expect(res).toStrictEqual(expected)
+  })
+
+  test('User in several groups', async () => {
+    const expected = {
+      type: 'home',
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'Your EOD Groups',
+            emoji: true
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'group1'
+          },
+          accessory: {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'Write group1 EOD Post',
+              emoji: true
+            },
+            action_id: 'write_eod'
+          }
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'group2'
+          },
+          accessory: {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'Write group2 EOD Post',
+              emoji: true
+            },
+            action_id: 'write_eod'
+          }
+        }
+      ]
+    }
+
+    db.getUserGroups.mockResolvedValue([
+      {
+        name: 'group1'
+      },
+      {
+        name: 'group2'
+      }
+    ])
+
+    const res = await helpers.constructHomeView('')
+    expect(res).toStrictEqual(expected)
+  })
+
+  test('User in no groups', async () => {
+    const expected = {
+      type: 'home',
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: 'Your EOD Groups',
+            emoji: true
+          }
+        },
+        {
+          type: 'divider'
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'Looks like you\'re not a contributor in any groups!'
+          }
+        }
+      ]
+    }
+
+    db.getUserGroups.mockResolvedValue([])
+
+    const res = await helpers.constructHomeView('')
+    expect(res).toStrictEqual(expected)
   })
 })

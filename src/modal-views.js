@@ -90,7 +90,7 @@ const groupCreate = {
       },
       label: {
         type: 'plain_text',
-        text: 'Time of day to post EOD thread (EST). The contributors will receive their EOD prompt at the selected time in their own timezone.',
+        text: 'Time of day at which users will get a reminder to make their EOD post (In their Timezone)',
         emoji: true
       },
       block_id: 'create_time'
@@ -391,4 +391,27 @@ const eodBoth = {
   ]
 }
 
-module.exports = { groupCreate, eodDefault, eodBlockers, eodNotes, eodBoth }
+const alreadyPosted = {
+  type: 'modal',
+  title: {
+    type: 'plain_text',
+    text: 'Cannot Make EOD Post',
+    emoji: true
+  },
+  close: {
+    type: 'plain_text',
+    text: 'Ok',
+    emoji: true
+  },
+  blocks: [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'You have already made your EOD post for this group today!'
+      }
+    }
+  ]
+}
+
+module.exports = { groupCreate, eodDefault, eodBlockers, eodNotes, eodBoth, alreadyPosted }

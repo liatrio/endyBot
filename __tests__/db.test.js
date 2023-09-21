@@ -16,7 +16,7 @@ describe('group.js testing suite', () => {
     const _group = {
       _id: '64dbee9baf23d8dc32bcbad3',
       name: 'Test Group',
-      contributors: ['UID12345'],
+      contributors: [{ name: 'UID12345' }],
       subscribers: ['UID56789'],
       postTime: 0,
       channel: '#test-channel',
@@ -35,7 +35,7 @@ describe('addToDB function', () => {
   test('should add a group to the database and return its ID', async () => {
     const fakeGroup = {
       name: 'test-group',
-      contributors: ['keoni', 'mikayla', 'carson'],
+      contributors: [{ name: 'keoni' }, { name: 'mikayla' }, { name: 'carson' }],
       subscribers: ['josh'],
       postTime: 5,
       channel: 'fake-channel',
@@ -84,7 +84,7 @@ describe('getGroup function', () => {
     const _group = {
       _id: '64e3e720f3e3e106543a0fbf',
       name: 'Test Group',
-      contributors: ['UID1234']
+      contributors: [{ name: 'UID1234' }]
     }
 
     mockingoose(Group).toReturn(_group, 'findOne')
@@ -102,17 +102,17 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       },
       {
         name: 'Group 2',
-        contributors: ['UID123'],
+        contributors: [{ name: 'UID123' }],
         subscribers: ['SID123']
       },
       {
         name: 'Group 3',
-        contributors: ['UID123', 'UID456', 'UID789'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }, { name: 'UID789' }],
         subscribers: ['SID789']
       }
     ]
@@ -128,7 +128,7 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       }
     ]
@@ -144,7 +144,7 @@ describe('listGroups testing suite', () => {
     const groups = [
       {
         name: 'Group 1',
-        contributors: ['UID123', 'UID456'],
+        contributors: [{ name: 'UID123' }, { name: 'UID456' }],
         subscribers: ['SID123']
       }
     ]
@@ -268,7 +268,7 @@ describe('describeGroup testing suite', () => {
   test('Describe existing group', async () => {
     const group = {
       name: 'Group 1',
-      contributors: ['UID123'],
+      contributors: [{ name: 'UID123' }],
       subscribers: ['SID123'],
       postTime: 14,
       channel: 'test-channel'
@@ -284,5 +284,164 @@ describe('describeGroup testing suite', () => {
 
     const result = await db.describeGroup('bad group name')
     expect(result).toBe('No group exists with name *bad group name*')
+  })
+})
+
+describe('getUserGroups testing suite', () => {
+  test('Unable to find group', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.getUserGroups('')
+    expect(res).toEqual([])
+  })
+
+  test('Found groups, user in none', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID123' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID456')
+    expect(res).toEqual([])
+  })
+
+  test('Found groups, user in one', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      },
+      {
+        contributors: [{ name: 'UID456' }]
+      }
+    ]
+
+    const expected = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID123')
+    expect(res.contributors).toEqual(expected.contributors)
+  })
+
+  test('Found groups, user in all', async () => {
+    const mockGroups = [
+      {
+        contributors: [{ name: 'UID456' }, { name: 'UID123' }]
+      },
+      {
+        contributors: [{ name: 'UID456' }]
+      }
+    ]
+
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.getUserGroups('UID456')
+    expect(res.length).toEqual(mockGroups.length)
+  })
+})
+
+describe('checkUserPosted testing suite', () => {
+  const mockGroups = [
+    {
+      name: 'Group1',
+      contributors: [{ name: 'U123', posted: true },
+        { name: 'U456', posted: false }]
+    }
+  ]
+
+  test('User posted', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U123', 'Group1')
+    expect(res).toBe(true)
+  })
+
+  test('User hasn\'t posted', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U456', 'Group1')
+    expect(res).toBe(false)
+  })
+
+  test('User not in group', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.checkUserPosted('U789', 'Group1')
+    expect(res).toEqual(-1)
+  })
+
+  test('Group not found', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.checkUserPosted('U123', 'Group2')
+    expect(res).toEqual(-1)
+  })
+})
+
+describe('updateUserPosted testing suite', () => {
+  const mockGroups = [
+    {
+      name: 'Group1',
+      contributors: [{ name: 'U123', posted: true },
+        { name: 'U456', posted: false }]
+    }
+  ]
+
+  test('Group Found', async () => {
+    mockingoose(Group).toReturn(mockGroups, 'find')
+    const res = await db.updateUserPosted('U123', 'Group1', true)
+    expect(res).toEqual(0)
+  })
+
+  test('Group Not Found', async () => {
+    mockingoose(Group).toReturn([], 'find')
+    const res = await db.updateUserPosted('U123', 'Group2', true)
+    expect(res).toEqual(-1)
+  })
+})
+
+describe('updateGroupPosted testing suite', () => {
+  test('No ts', async () => {
+    const group = {
+      posted: true,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve(group))
+    }
+
+    const expected = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve())
+    }
+
+    const res = await db.updateGroupPosted(group)
+    expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
+  })
+
+  test('With ts', async () => {
+    const group = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.resolve(group))
+    }
+
+    const expected = {
+      posted: true,
+      ts: '5678',
+      save: jest.fn(() => Promise.resolve())
+    }
+
+    const res = await db.updateGroupPosted(group, '5678')
+    expect(JSON.stringify(res)).toStrictEqual(JSON.stringify(expected))
+  })
+
+  test('Error', async () => {
+    const group = {
+      posted: false,
+      ts: '1234',
+      save: jest.fn(() => Promise.reject(new Error('Test error')))
+    }
+
+    const res = await db.updateGroupPosted(group)
+    expect(res).toBeNull()
   })
 })

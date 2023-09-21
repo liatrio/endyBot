@@ -13,11 +13,12 @@ const Schema = mongoose.Schema
  */
 const groupSchema = Schema({
   name: String,
-  contributors: [String],
+  contributors: [JSON],
   subscribers: [String],
   postTime: Number,
   channel: String,
-  ts: String
+  ts: String,
+  posted: Boolean
 })
 
 const Group = mongoose.model('Group', groupSchema)

@@ -185,7 +185,7 @@ async function describeGroup (groupname) {
     // Display all contributors of the group
     stringedResult += '*Contributors*: '
     for (const user of group.contributors) {
-      stringedResult += `<@${user}>  `
+      stringedResult += `<@${user.name}>  `
     }
 
     // Display all subscribers of the group
@@ -281,4 +281,109 @@ async function removeSubscriber (groupname, userID) {
   }
 }
 
-module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber }
+/**
+ * @param {String} userID - Slack ID of the user to find all groups for
+ * @returns a list of the groups a user is in
+ */
+async function getUserGroups (userID) {
+  // declare here so it's recognized in every try block
+  let groups
+  try {
+    // Gather all groups from the database
+    groups = await Group.find({})
+    if (groups.length == 0) {
+      return []
+    }
+  } catch (error) {
+    return `Error while gathering groups from database: ${error.message}`
+  }
+
+  const userGroups = []
+
+  try {
+    // Check all contributor lists to populate arrays
+    for (const group of groups) {
+      for (const contrib of group.contributors) {
+        if (contrib.name == userID) {
+          userGroups.push(group)
+        }
+      }
+    }
+  } catch (error) {
+    return `Error while parsing through subscriber lists in listGroups: ${error.message}`
+  }
+
+  return userGroups
+}
+
+/**
+ * Checks if the given user has posted for this group today or not
+ * @param {String} UID - Slack User ID
+ * @returns bool
+ */
+async function checkUserPosted (UID, groupName) {
+  try {
+    const group = await Group.find({ name: groupName })
+
+    for (const i in group[0].contributors) {
+      if (group[0].contributors[i].name == UID) {
+        return group[0].contributors[i].posted
+      }
+    }
+
+    return -1
+  } catch (error) {
+    console.log(`Error checking if user posted: ${error}`)
+    return -1
+  }
+}
+
+/**
+ * Finds the user in the contributors list of the given group and updates their posted bool to the given one here
+ * @param {String} user
+ * @param {JSON} groupName
+ * @param {bool} posted
+ */
+async function updateUserPosted (user, groupName, posted) {
+  try {
+    const group = await Group.find({ name: groupName })
+
+    for (const i in group[0].contributors) {
+      if (group[0].contributors[i].name == user) {
+        group[0].contributors[i].posted = posted
+        group[0].markModified('contributors')
+        await group[0].save()
+      }
+    }
+  } catch (error) {
+    console.log(`Unable to update posted status for user ${user} in group ${groupName}: ${error}`)
+    return -1
+  }
+  return 0
+}
+
+/**
+ * Updates the posted varaible in a group. If ts is provided, posted is set to true. If no ts is provided, posted is set to false.
+ * @param {JSON} group
+ * @param {String} ts
+ * @returns The updated group object on success, and null on failure
+ */
+async function updateGroupPosted (group, ts) {
+  try {
+    if (!ts) {
+      group.posted = false
+      const res = await group.save()
+      return res
+    }
+
+    group.ts = ts
+    group.posted = true
+    const res = await group.save()
+    return res
+  } catch (error) {
+    console.log(`Error updating posted for group ${group.name}: ${error}`)
+    return null
+  }
+}
+
+module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber, getUserGroups, checkUserPosted, updateUserPosted, updateGroupPosted }

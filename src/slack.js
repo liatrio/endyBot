@@ -42,6 +42,13 @@ async function dmUsers (app, group, user) {
   if (!user) {
     return user
   }
+  // check if user has already posted today
+  for (let i = 0; i < group.contributors.length; i++) {
+    if (group.contributors[i].name == user && (group.contributors[i].posted)) {
+      console.log(`User ${user} has already posted today, skipping.`)
+      return null
+    }
+  }
   let message
   try {
     const res = await app.client.chat.postMessage({
@@ -185,13 +192,28 @@ function parseCreateModal (view) {
   try {
     const rawTime = view.state.values.create_time.group_create_time.selected_time
     const time = Number(rawTime.substring(0, 2))
+
+    // creating contributor objects
+    const contribs = []
+
+    for (let i = 0; i < view.state.values.contributors.group_create_contributors.selected_users.length; i++) {
+      const thisObj = {
+        name: '',
+        posted: false
+      }
+
+      thisObj.name = view.state.values.contributors.group_create_contributors.selected_users[i]
+      contribs.push(thisObj)
+    }
+
     const newGroup = {
       name: view.state.values.group_name.group_create_name.value,
-      contributors: view.state.values.contributors.group_create_contributors.selected_users,
+      contributors: contribs,
       subscribers: view.state.values.subscribers.group_create_subscribers.selected_users,
       postTime: time,
       channel: view.state.values.channel.group_create_channel.selected_channel,
-      ts: ''
+      ts: '',
+      posted: false
     }
 
     return newGroup
@@ -201,8 +223,14 @@ function parseCreateModal (view) {
   }
 }
 
-async function sendEODModal (app, triggerId, groupName) {
-  const modal = views.eodDefault
+async function sendEODModal (app, triggerId, groupName, userID) {
+  const userPosted = await db.checkUserPosted(userID, groupName)
+  let modal
+  if (userPosted) {
+    modal = views.alreadyPosted
+  } else {
+    modal = views.eodDefault
+  }
   modal.private_metadata = groupName
   const res = await app.client.views.open({
     trigger_id: triggerId,
@@ -272,6 +300,17 @@ async function postEODResponse (app, view, uid) {
     const errorMsg = `Group ${groupName} not found.`
     logger.error(`Error positng EOD response: ${errorMsg}`)
     return Error(errorMsg)
+  }
+
+  // check if the thread has been posted today
+  if (group.posted === false) {
+    // post thread
+    try {
+      const ts = await createPost(app, group)
+      await db.updateGroupPosted(group, ts)
+    } catch (error) {
+      console.log(`Unable to create EOD thread for group ${group.name}: ${error}`)
+    }
   }
 
   // construct the response block
@@ -399,4 +438,29 @@ async function eodDmUpdatePost (app, user) {
     logger.error(error)
   }
 }
-module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList }
+
+function sendMessage (app, user, message) {
+  try {
+    app.client.chat.postMessage({
+      channel: user,
+      text: message
+    })
+  } catch (error) {
+    console.error(`Unable to send message to ${user}: ${error}`)
+    return -1
+  }
+}
+
+async function sendHomeView (app, user, view) {
+  try {
+    await app.client.views.publish({
+      user_id: user,
+      view
+    })
+  } catch (error) {
+    console.log(`Error sending home view: ${error}`)
+    return -1
+  }
+}
+
+module.exports = { sendCreateModal, parseCreateModal, sendEODModal, updateEODModal, dmUsers, createPost, postEODResponse, dmSubs, notifySubsAboutGroupDeletion, eodDmUpdateDelete, eodDmUpdatePost, getUserList, sendMessage, sendHomeView }
