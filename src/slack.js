@@ -2,6 +2,12 @@
 const views = require('./modal-views')
 const db = require('./db')
 const helpers = require('./helpers')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'debug' // setting to this level in prod to help find bugs
+}))
 require('dotenv').config() // stores our organization link for slack
 
 /**
@@ -11,7 +17,6 @@ require('dotenv').config() // stores our organization link for slack
  * @returns returns the timestamp of the post on success and null on failure
 */
 async function createPost (app, group) {
-  console.log(group)
   try {
     const cID = group.channel
     const groupname = group.name
@@ -19,9 +24,10 @@ async function createPost (app, group) {
       channel: cID,
       text: `*${groupname}* EOD :thread:`
     })
+    logger.info(`Posted ${group.name}'s EOD thread in channel ${cID}`)
     return res.ts
   } catch (error) {
-    console.error(`something happened while making the thread\n group: ${group.name}\n channel: ${group.channel}\n error: `, error)
+    logger.error(`Unable to create${group.name}'s EOD post in channel ${group.channel}: ${error}`)
     return null
   }
 }
@@ -34,13 +40,13 @@ async function createPost (app, group) {
  */
 async function dmUsers (app, group, user) {
   if (!user) {
-    console.log('null user')
+    logger.warn(`Did not send null user a DM for group ${group.name}`)
     return user
   }
   // check if user has already posted today
   for (let i = 0; i < group.contributors.length; i++) {
     if (group.contributors[i].name == user && (group.contributors[i].posted)) {
-      console.log(`User ${user} has already posted today, skipping.`)
+      logger.error(`User ${user} has already posted today, skipping.`)
       return null
     }
   }
@@ -76,9 +82,10 @@ async function dmUsers (app, group, user) {
       ]
     })
     message = { channel: res.channel, ts: res.ts, uid: user }
+    logger.info(`Sent EOD reminder to ${user} for ${group.name}`)
     return message
   } catch (error) {
-    console.error('something happened while sending dm: ', error)
+    logger.error(`Unable to send reminder to ${user}: ${error}`)
     return null
   }
 }
@@ -91,15 +98,15 @@ async function dmUsers (app, group, user) {
  */
 async function validateInput (group, threadID) {
   if (!group.subscribers.length) {
-    console.log('group length is 0')
+    logger.warn('group length is 0')
     return 1
   }
   if (!group.channel) {
-    console.log('group channel is a null object')
+    logger.warn('group channel is a null object')
     return 2
   }
   if (!threadID) {
-    console.log('thread id is null')
+    logger.warn('thread id is null')
     return 3
   }
   return 0
@@ -154,14 +161,13 @@ async function dmSubs (app, group, sub, threadID) {
       ],
       // If the client doesn't support blocks, this text field will trigger and send the message
       // This avoid's bolt throwing a warning each time a message is sent
-      text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}`
+      text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}*`
     })
+    logger.info(`Send subscriber ${sub} the EOD thread (${group.ts}) for ${group.name}`)
   } catch (error) {
-    console.error(`something went wrong trying to send the message: \n \
-      sub: ${group.sub}\n \
-      group: ${group.name}\n \
-      error: `, error)
+    logger.error(`Unable to send subscriber ${sub} their notification for ${group.name}: ${error}`)
   }
+  logger.info(`Sent subscriber ${sub} their notification for ${group.name}`)
   return check
 }
 
@@ -173,12 +179,12 @@ async function sendCreateModal (app, triggerId) {
     })
 
     if (res.ok != true) {
-      console.log(`Error opening modal: ${res.error}`)
+      logger.error(`Error opening modal: ${res.error}`)
       return -1
     }
     return 0
   } catch (error) {
-    console.log(`Exception thrown while sending modal: ${error.message}`)
+    logger.error(`Exception thrown while sending modal: ${error.message}`)
     // throw error to be caught in app.js and print a message to the user
     throw error
   }
@@ -214,7 +220,7 @@ function parseCreateModal (view) {
 
     return newGroup
   } catch (err) {
-    console.log(`Unable to parse view. Please double-check the input. Error: ${err}`)
+    logger.error(`Unable to parse view. Please double-check the input. Error: ${err}`)
     return null
   }
 }
@@ -234,7 +240,7 @@ async function sendEODModal (app, triggerId, groupName, userID) {
   })
 
   if (res.ok != true) {
-    console.log(`Error opening modal: ${res.error}`)
+    logger.error(`Error opening modal: ${res.error}`)
     return -1
   }
   return 0
@@ -257,7 +263,7 @@ function updateEODModal (app, body, toAdd) {
       targetView += 4
       break
     default:
-      console.log('Attempting to add invalid block')
+      logger.warn('Attempting to add invalid block')
       return -1
   }
 
@@ -294,7 +300,7 @@ async function postEODResponse (app, view, uid) {
   if (group == null) {
     // indicates group was not found
     const errorMsg = `Group ${groupName} not found.`
-    console.log(`Error positng EOD response: ${errorMsg}`)
+    logger.error(`Error positng EOD response: ${errorMsg}`)
     return Error(errorMsg)
   }
 
@@ -305,7 +311,7 @@ async function postEODResponse (app, view, uid) {
       const ts = await createPost(app, group)
       await db.updateGroupPosted(group, ts)
     } catch (error) {
-      console.log(`Unable to create EOD thread for group ${group.name}: ${error}`)
+      logger.error(`Unable to create EOD thread for group ${group.name}: ${error}`)
     }
   }
 
@@ -321,9 +327,11 @@ async function postEODResponse (app, view, uid) {
   })
 
   if (res.ok != true) {
-    console.log(`Error posting EOD response: ${res.error}`)
+    logger.error(`Error posting EOD response: ${res.error}`)
     return res.error
   }
+
+  logger.info(`Posted ${uid}'s EOD response for ${group.name}`)
 
   return res.message.blocks
 }
@@ -338,7 +346,6 @@ async function postEODResponse (app, view, uid) {
 async function notifySubsAboutGroupDeletion (app, group, userID) {
   // The passed in group has already been verified by handleGroupDeletion in app-helper
   if (group.subscribers.length == 0) {
-    console.log('No subscribers in the group')
     return 1
   }
   // Send a message to each subscriber notifying them what group was deleted, and which user deleted it
@@ -356,8 +363,9 @@ async function notifySubsAboutGroupDeletion (app, group, userID) {
           }
         ]
       })
+      logger.info(`Notified ${user} that ${group.name} was deleted`)
     } catch (error) {
-      console.error(`something happened while notifying subscriber ${user} about ${group.name} deletion: `, error)
+      logger.error(`Unable to notify subscriber ${user} about ${group.name} deletion: `, error)
       continue
     }
   }
@@ -376,7 +384,7 @@ async function getUserList (app) {
 
   if (usrList.ok != true) {
     // error in API call
-    console.log(`Unable to get user list: ${usrList.error}`)
+    logger.error(`Unable to get user list: ${usrList.error}`)
     return usrList.error
   }
 
@@ -403,7 +411,7 @@ async function eodDmUpdateDelete (app, user, ts) {
       return null
     }
   } catch (error) {
-    console.error('something went wrong while deleting the message: ', error)
+    logger.error('something went wrong while deleting the message: ', error)
   }
 }
 
@@ -432,7 +440,7 @@ async function eodDmUpdatePost (app, user) {
     }
     return message
   } catch (error) {
-    console.error(error)
+    logger.error(error)
   }
 }
 
@@ -455,7 +463,7 @@ async function sendHomeView (app, user, view) {
       view
     })
   } catch (error) {
-    console.log(`Error sending home view: ${error}`)
+    logger.error(`Error sending home view: ${error}`)
     return -1
   }
 }
