@@ -24,7 +24,7 @@ async function createPost (app, group) {
       channel: cID,
       text: `*${groupname}* EOD :thread:`
     })
-    logger.info(`Posted ${group.name}'s EOD thread`)
+    logger.info(`Posted ${group.name}'s EOD thread in channel ${cID}`)
     return res.ts
   } catch (error) {
     logger.error(`Unable to create${group.name}'s EOD post in channel ${group.channel}: ${error}`)
@@ -40,6 +40,7 @@ async function createPost (app, group) {
  */
 async function dmUsers (app, group, user) {
   if (!user) {
+    logger.warn(`Did not send null user a DM for group ${group.name}`)
     return user
   }
   // check if user has already posted today
@@ -162,6 +163,7 @@ async function dmSubs (app, group, sub, threadID) {
       // This avoid's bolt throwing a warning each time a message is sent
       text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}*`
     })
+    logger.info(`Send subscriber ${sub} the EOD thread (${group.ts}) for ${group.name}`)
   } catch (error) {
     logger.error(`Unable to send subscriber ${sub} their notification for ${group.name}: ${error}`)
   }
@@ -329,6 +331,8 @@ async function postEODResponse (app, view, uid) {
     return res.error
   }
 
+  logger.info(`Posted ${uid}'s EOD response for ${group.name}`)
+
   return res.message.blocks
 }
 
@@ -359,6 +363,7 @@ async function notifySubsAboutGroupDeletion (app, group, userID) {
           }
         ]
       })
+      logger.info(`Notified ${user} that ${group.name} was deleted`)
     } catch (error) {
       logger.error(`Unable to notify subscriber ${user} about ${group.name} deletion: `, error)
       continue

@@ -8,7 +8,7 @@ const logger = require('pino')(({
   transport: {
     target: 'pino-pretty'
   },
-  level: 'debug' // setting to this level in prod to help find bugs
+  level: 'info'
 }))
 require('dotenv').config()
 
@@ -61,6 +61,7 @@ try {
   // listen for user commands
   app.command(slashcommand, async ({ command, ack, respond }) => {
     await ack()
+    logger.info(`${command.user_id} ran command ${command.text}`)
 
     // declare command object to be populated in commandParse
     const commandObj = appHelper.commandParse(command.text)
@@ -71,6 +72,7 @@ try {
         try {
           await slack.sendCreateModal(app, command.trigger_id)
         } catch (error) {
+          logger.error(`Unable to send create modal: ${error}`)
           respond('Whoops! Looks like we bit off a bit more than we can chew. Please re-attempt to create the group in a few moments.')
         }
         break

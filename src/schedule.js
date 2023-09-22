@@ -19,6 +19,7 @@ async function startCronJobs (eodSent, allTasks, app, usrList) {
   const groups = await Group.find({})
   if (groups.length !== 0) {
     for (const group of groups) {
+      logger.info(`Creating cron jobs for group ${group.name}`)
       // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
       await scheduleCronJob(eodSent, allTasks, group, app, usrList)
     }
@@ -133,6 +134,8 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       subTasks
     }
 
+    logger.info(`Scheduled tasks for group ${group.name}: ${entry}`)
+
     // now we can find this entry later if the group needs to be deleted
     allTasks.push(entry)
 
@@ -161,6 +164,8 @@ function removeAllTasks (allTasks, groupName) {
     }
     i += 1
   }
+
+  logger.info(`Removed tasks for group ${groupName}`)
 }
 
 // function to remove a single subscriber task (for unsubscribe functionality)
@@ -201,6 +206,8 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
         break
       }
     }
+
+    logger.info(`Created subscriber tasks for user ${subscriber} in group ${groupName}`)
   } catch (error) {
     logger.error(`Error while adding subscriber task: ${error.message}`)
   }
@@ -224,6 +231,7 @@ function removeSubscriberTask (allTasks, groupName, subscriber) {
       }
     }
   }
+  logger.info(`Removed subscriber tasks for user ${subscriber} in group ${groupName}`)
 }
 
 function convertPostTimeToCron (hour) {

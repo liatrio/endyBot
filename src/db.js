@@ -4,7 +4,7 @@ const logger = require('pino')(({
   transport: {
     target: 'pino-pretty'
   },
-  level: 'debug' // setting to this level in prod to help find bugs
+  level: 'info'
 }))
 
 // Put all functions interacting with the database here
@@ -27,6 +27,7 @@ mongoose.connect(`mongodb://${db}:27017/endybot`, connectOptions).then(
 async function addToDB (groupJson) {
   try {
     const inserted = await Group.create(groupJson)
+    logger.info(`Group ${groupJson.name} inserted into the database with the following structure: ${groupJson}`)
     return inserted._id
   } catch (err) {
     logger.error(`Unable to add ${groupJson.name} to database: ${err}`)
@@ -153,7 +154,7 @@ async function getGroup (groupName, groupID) {
   }
 
   if (JSON.stringify(searchParams) == '{}') {
-    logger.error('Please supply either the groupID or group name.')
+    logger.error(`Unable to get group with the parameters ${groupName}, ${groupID}`)
     return -1
   }
 
@@ -269,11 +270,11 @@ async function removeSubscriber (groupname, userID) {
       await group.save()
 
       // Notify user upon success
+      logger.info(`${userID} sucessfully unsubscribed from ${groupname}`)
       return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`
     }
 
     // If the user was initially unsubscribed from the group, do nothing and notify them
-    logger.info(`${userID} sucessfully unsubscribed from ${groupname}`)
     return `You were already unsubscribed from *${groupname}*`
   } catch (error) {
     logger.error(`Error removing subscriber ${userID} from group ${groupname}: ${error.message}`)
@@ -295,6 +296,7 @@ async function getUserGroups (userID) {
       return []
     }
   } catch (error) {
+    logger.error(`Error gathering groups from database: ${error}`)
     return `Error while gathering groups from database: ${error.message}`
   }
 
@@ -310,6 +312,7 @@ async function getUserGroups (userID) {
       }
     }
   } catch (error) {
+    logger.error(`Error while parsing  through list in listGroups: ${error}`)
     return `Error while parsing through subscriber lists in listGroups: ${error.message}`
   }
 
@@ -327,10 +330,12 @@ async function checkUserPosted (UID, groupName) {
 
     for (const i in group[0].contributors) {
       if (group[0].contributors[i].name == UID) {
+        logger.info(`Got posted value ${group[0].contributors[i].posted} for user ${group[0].contributors[i].name}`)
         return group[0].contributors[i].posted
       }
     }
 
+    logger.error(`Unable to find contributor ${UID} in group ${groupName}`)
     return -1
   } catch (error) {
     logger.error(`Error checking if user posted: ${error}`)
@@ -355,6 +360,8 @@ async function updateUserPosted (user, groupName, posted) {
         await group[0].save()
       }
     }
+
+    logger.info(`Updated ${user} posted status to ${posted} in group ${groupName}`)
   } catch (error) {
     logger.error(`Unable to update posted status for user ${user} in group ${groupName}: ${error}`)
     return -1
@@ -373,12 +380,14 @@ async function updateGroupPosted (group, ts) {
     if (!ts) {
       group.posted = false
       const res = await group.save()
+      logger.info(`Updated ${group.name}'s posted status to ${group.posted}`)
       return res
     }
 
     group.ts = ts
     group.posted = true
     const res = await group.save()
+    logger.info(`Updated ${group.name}'s posted status to ${group.posted}`)
     return res
   } catch (error) {
     logger.error(`Error updating posted for group ${group.name}: ${error}`)
