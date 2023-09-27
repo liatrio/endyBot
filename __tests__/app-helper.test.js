@@ -65,6 +65,13 @@ describe('handleGroupDelete testing suite', () => {
     const res = await appHelper.handleGroupDelete(app, allTasks, 'group', 'UID123')
     expect(res).toBe('*group* was removed successfully')
   })
+
+  test('Error', async () => {
+    db.deleteGroup.mockRejectedValue(Error('oops!'))
+
+    const res = await appHelper.handleGroupDelete('', { id: '' }, [], [], '', [])
+    expect(res).toStrictEqual('Error from handleGroupDelete for group : oops!')
+  })
 })
 
 describe('iterateEodSent() tests', () => {
