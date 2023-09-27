@@ -171,7 +171,6 @@ async function dmSubs (app, group, sub, threadID) {
   } catch (error) {
     logger.error(`Unable to send subscriber ${sub} their notification for ${group.name}: ${error}`)
   }
-  logger.info(`Sent subscriber ${sub} their notification for ${group.name}`)
   return check
 }
 
