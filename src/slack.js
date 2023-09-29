@@ -125,49 +125,52 @@ async function dmSubs (app, group, sub, threadID) {
   const link = `${process.env.ORG}${group.channel}/p${threadID}`
 
   try {
-    app.client.chat.postMessage({
-      channel: sub,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `Hey there, here's *${group.name}*'s EOD thread`
+    if (group.posted) {
+      app.client.chat.postMessage({
+        channel: sub,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `Hey there, here's *${group.name}*'s EOD thread`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `${link}`
+            }
+          },
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'You can unsubscribe from the group at any time to stop receiving these messages'
+            }
+          },
+          {
+            type: 'divider'
           }
-        },
-        {
-          type: 'divider'
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `${link}`
-          }
-        },
-        {
-          type: 'divider'
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: 'You can unsubscribe from the group at any time to stop receiving these messages'
-          }
-        },
-        {
-          type: 'divider'
-        }
-      ],
-      // If the client doesn't support blocks, this text field will trigger and send the message
-      // This avoid's bolt throwing a warning each time a message is sent
-      text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}*`
-    })
-    logger.info(`Send subscriber ${sub} the EOD thread (${group.ts}) for ${group.name}`)
+        ],
+        // If the client doesn't support blocks, this text field will trigger and send the message
+        // This avoid's bolt throwing a warning each time a message is sent
+        text: `You can view *${group.name}*'s EOD thread by clicking this link: *${link}*`
+      })
+      logger.info(`Send subscriber ${sub} the EOD thread (${group.ts}) for ${group.name}`)
+    } else {
+      logger.info(`${group.name} has not posted today, not sending thread.`)
+    }
   } catch (error) {
     logger.error(`Unable to send subscriber ${sub} their notification for ${group.name}: ${error}`)
   }
-  logger.info(`Sent subscriber ${sub} their notification for ${group.name}`)
   return check
 }
 
