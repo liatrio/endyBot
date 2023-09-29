@@ -78,7 +78,7 @@ describe('iterateEodSent() tests', () => {
   const mockApp = new App({})
   test('successful iteration', async () => {
     const data = [
-      { id: 'u1234', channel: 'c1234', ts: '1234' }
+      { uid: 'u1234', channel: 'c1234', ts: '1234' }
     ]
     const body = {
       user: {
