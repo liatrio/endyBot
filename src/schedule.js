@@ -52,9 +52,10 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
     // Scheduling task to reset the "posted" variable for the group and each contributor
     const resetTask = cron.schedule('59 23 * * 1-5', async () => {
-      db.updateGroupPosted(group)
-      for (let i = 0; i < group.contributors.length; i++) {
-        db.updateUserPosted(group.contributors[i].name, group.name, false)
+      const curGroup = db.getGroup(group.name) // getting most up to gate version of the group
+      db.updateGroupPosted(curGroup)
+      for (let i = 0; i < curGroup.contributors.length; i++) {
+        db.updateUserPosted(curGroup.contributors[i].name, curGroup.name, false)
       }
     }, {
       timezone: 'America/Los_Angeles' // PST-- Setting it to this to try to limitt cases of late-night EOD posts going to the wrong thread
@@ -79,7 +80,8 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
       // creating cron task for single user
       const contribTask = cron.schedule(cronTime, async () => {
-        reminderSent = await slack.dmUsers(app, group, contrib)
+        const curGroup = db.getGroup(group.name)
+        reminderSent = await slack.dmUsers(app, curGroup, contrib)
         eodSent.push(reminderSent)
       }, {
         timezone: tz
@@ -112,7 +114,8 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
       // creating cron task for single user. Subs will get the link at 8pm local time
       const subTask = cron.schedule('0 20 * * 1-5', async () => {
-        slack.dmSubs(app, group, sub, group.ts)
+        const curGroup = db.getGroup(group.name)
+        slack.dmSubs(app, curGroup, sub, curGroup.ts)
       }, {
         timezone: tz
       })
