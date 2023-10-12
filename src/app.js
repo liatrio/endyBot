@@ -4,6 +4,12 @@ const database = require('./db')
 const schedule = require('./schedule')
 const helpers = require('./helpers')
 const appHelper = require('./app-helper')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'info'
+}))
 require('dotenv').config()
 
 // setting up app
@@ -15,11 +21,11 @@ const app = new App({
 
 // Take care of any fatal exceptions and ensure the app doesn't crash
 process.on('unhandledRejection', (reason, p) => {
-  console.error('Unhandled Rejection at:', p, 'reason:', reason)
+  logger.error('Unhandled Rejection at:', p, 'reason:', reason)
 })
 
 process.on('uncaughtException', (error) => {
-  console.error(`Caught exception: ${error}\n` + `Exception origin: ${error.stack}`)
+  logger.error(`Caught exception: ${error}\n` + `Exception origin: ${error.stack}`)
 })
 
 // Define some global variables so they can be recognized by all try/catch blocks
@@ -32,7 +38,7 @@ const eodSent = []
 
 // starting app
 try {
-  app.start(process.env.PORT || 3000).then(console.log('⚡️ Bolt app is currently running!'))
+  app.start(process.env.PORT || 3000).then(logger.info('⚡️ Bolt app is currently running!'))
 
   // determine slash command from dev value
   slashcommand = '/endybot'
@@ -48,13 +54,14 @@ try {
     schedule.startCronJobs(eodSent, allTasks, app, usrList)
   })
 } catch (error) {
-  console.log(`Error starting app: ${error.message}`)
+  logger.error(`Error starting app: ${error.message}`)
 }
 
 try {
   // listen for user commands
   app.command(slashcommand, async ({ command, ack, respond }) => {
     await ack()
+    logger.info(`${command.user_id} ran command ${command.text}`)
 
     // declare command object to be populated in commandParse
     const commandObj = appHelper.commandParse(command.text)
@@ -65,6 +72,7 @@ try {
         try {
           await slack.sendCreateModal(app, command.trigger_id)
         } catch (error) {
+          logger.error(`Unable to send create modal: ${error}`)
           respond('Whoops! Looks like we bit off a bit more than we can chew. Please re-attempt to create the group in a few moments.')
         }
         break
@@ -111,7 +119,7 @@ try {
     }
   })
 } catch (error) {
-  console.log(`Error in app.command function: ${error.message}`)
+  logger.error(`Error in app.command function: ${error.message}`)
 }
 
 try {
@@ -125,13 +133,17 @@ try {
   // listen for response from EOD-response modal
   app.view('EOD-response', async ({ body, ack }) => {
     await ack()
+
     appHelper.iterateEodSent(app, eodSent, body)
 
     // handle response from EOD modal here
     slack.postEODResponse(app, body.view, body.user.id)
+
+    // update contributors "posted" status for the day
+    await database.updateUserPosted(body.user.id, body.view.private_metadata, true)
   })
 } catch (error) {
-  console.log(`Error in app.view: ${error.message}`)
+  logger.error(`Error in app.view: ${error.message}`)
 }
 
 try {
@@ -154,13 +166,13 @@ try {
     await ack()
 
     // parse the group name from the message
-    const groupName = helpers.groupNameFromMessage(body.message.text)
+    const groupName = helpers.groupNameFromMessage(body)
 
     // open the EOD modal
-    slack.sendEODModal(app, body.trigger_id, groupName)
+    slack.sendEODModal(app, body.trigger_id, groupName, body.user.id)
   })
 } catch (error) {
-  console.log(`Error in app.action: ${error.message}`)
+  logger.error(`Error in app.action: ${error.message}`)
 }
 
 try {
@@ -174,7 +186,17 @@ try {
     appHelper.addUser(usrList, event)
   })
 } catch (error) {
-  console.log(`Error in app.userUpdate: ${error.message}`)
+  logger.error(`Error in app.userUpdate: ${error.message}`)
+}
+
+try {
+  // constructing and sending the home view when user opens the home page
+  app.event('app_home_opened', async ({ event }) => {
+    const view = await helpers.constructHomeView(event.user)
+    slack.sendHomeView(app, event.user, view)
+  })
+} catch (error) {
+  logger.error(`Error creating home view: ${error}`)
 }
 
 module.exports = { app }

@@ -1,6 +1,12 @@
 const slack = require('./slack')
 const database = require('./db')
 const schedule = require('./schedule')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'info'
+}))
 
 // Analyze the entire command from the user, and populate the commandObj accordingly
 function commandParse (command) {
@@ -30,7 +36,7 @@ function commandParse (command) {
     commandObj.groupName = parsed.join(' ')
     return commandObj
   } catch (error) {
-    console.log(`Error while parsing command string: ${error.message}`)
+    logger.error(`Error while parsing command string: ${error.message}`)
     return commandObj
   }
 }
@@ -47,6 +53,7 @@ async function handleGroupCreate (view, user, eodSent, allTasks, app, usrList) {
   const existGroup = await database.getGroup(newGroup.name)
 
   if (existGroup !== null) {
+    logger.error(`Unable to create duplicate group ${newGroup.name}`)
     slack.sendMessage(app, user.id, `Cannot create group: group with name ${newGroup.name} already exists.`)
     return -1
   }
@@ -58,6 +65,7 @@ async function handleGroupCreate (view, user, eodSent, allTasks, app, usrList) {
   const group = await database.getGroup(undefined, groupID)
   schedule.scheduleCronJob(eodSent, allTasks, group, app, usrList)
 
+  logger.info(`Created group ${newGroup.name}`)
   slack.sendMessage(app, user.id, `Successfully created group ${newGroup.name}.`)
   return 0
 }
@@ -75,21 +83,23 @@ async function handleGroupDelete (app, allTasks, groupName, userID) {
     const res = await database.deleteGroup(groupName)
     if (res === `*${groupName}* was removed successfully`) {
       // Passing in the userID of the delete function caller so the function can print which user deleted the group
+      logger.info(`Group ${groupName} deleted`)
       await slack.notifySubsAboutGroupDeletion(app, group, userID)
     }
     return res
   } catch (error) {
+    logger.error(`Error from handleGroupDelete for group ${groupName}: ${error}`)
     return `Error from handleGroupDelete for group ${groupName}: ${error.message}`
   }
 }
 
 async function iterateEodSent (app, eodSent, body) {
   if (eodSent.length === 0) {
-    console.log('null eod array')
     return null
   }
   for (let i = 0; i < eodSent.length; i++) {
     if (eodSent[i].uid === body.user.id) {
+      logger.info(`Handling EOD response from ${body.user.id}`)
       slack.eodDmUpdateDelete(app, eodSent[i].channel, eodSent[i].ts)
       slack.eodDmUpdatePost(app, eodSent[i].channel)
       return eodSent
@@ -99,6 +109,7 @@ async function iterateEodSent (app, eodSent, body) {
 }
 
 function updateUser (usrList, event) {
+  logger.info('Updating a user in the workspace.')
   // define test to filter list by
   const changedUsr = (usr) => usr.id == event.user.id
 
@@ -110,6 +121,7 @@ function updateUser (usrList, event) {
 }
 
 function addUser (usrList, event) {
+  logger.info('Adding new user to workspace cache')
   usrList.push(event.user)
 }
 

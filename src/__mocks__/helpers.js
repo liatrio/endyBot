@@ -2,5 +2,6 @@
 
 module.exports = {
   groupNameFromMessage: jest.fn(),
-  formatEODResponse: jest.fn()
+  formatEODResponse: jest.fn(),
+  constructHomeView: jest.fn(() => Promise.resolve())
 }

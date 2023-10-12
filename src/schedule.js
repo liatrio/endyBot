@@ -2,6 +2,12 @@ const Group = require('../db-schemas/group.js')
 const cron = require('node-cron')
 const slack = require('./slack')
 const db = require('./db')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'debug' // setting to this level in prod to help find bugs
+}))
 require('node-cron')
 
 let reminderSent
@@ -13,12 +19,13 @@ async function startCronJobs (eodSent, allTasks, app, usrList) {
   const groups = await Group.find({})
   if (groups.length !== 0) {
     for (const group of groups) {
+      logger.info(`Creating cron jobs for group ${group.name}`)
       // create a cron job for the group. this job will persist until the app is reloaded or it is stopped upon group deletion
       await scheduleCronJob(eodSent, allTasks, group, app, usrList)
     }
     return 0
   }
-  console.log('No groups in database, not scheduling anything')
+  logger.info('No groups in database, not scheduling anything')
   return null
 }
 
@@ -39,13 +46,17 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
     // convert db postTime to cron time
     const cronTime = convertPostTimeToCron(group.postTime)
     if (cronTime == null) {
-      console.log(`Error: cannot add group '${group.name}' to schedule because an invalid time was entered`)
+      logger.warn(`Cannot add group '${group.name}' to schedule because an invalid time was entered`)
       return null
     }
 
-    // Scheduling task to reset the "posted" variable
-    const resetTask = cron.schedule('0 23 * * 1-5', async () => {
-      db.updatePosted(group)
+    // Scheduling task to reset the "posted" variable for the group and each contributor
+    const resetTask = cron.schedule('59 23 * * 1-5', async () => {
+      const curGroup = db.getGroup(group.name) // getting most up to gate version of the group
+      db.updateGroupPosted(curGroup)
+      for (let i = 0; i < curGroup.contributors.length; i++) {
+        db.updateUserPosted(curGroup.contributors[i].name, curGroup.name, false)
+      }
     }, {
       timezone: 'America/Los_Angeles' // PST-- Setting it to this to try to limitt cases of late-night EOD posts going to the wrong thread
     })
@@ -55,10 +66,10 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
     for (let i = 0; i < group.contributors.length; i++) {
       // get timezone
-      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i])
+      const usrInfo = usrList.filter((usr) => usr.id == group.contributors[i].name)
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
-        console.log('Error: Unable to schedule task; could not find contributor')
+        logger.error('Unable to schedule task; could not find contributor')
         continue
       }
       // getting index 0 because filter returns a list
@@ -69,7 +80,8 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
       // creating cron task for single user
       const contribTask = cron.schedule(cronTime, async () => {
-        reminderSent = await slack.dmUsers(app, group, contrib)
+        const curGroup = db.getGroup(group.name)
+        reminderSent = await slack.dmUsers(app, curGroup, contrib)
         eodSent.push(reminderSent)
       }, {
         timezone: tz
@@ -91,7 +103,7 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       const usrInfo = usrList.filter((usr) => usr.id == group.subscribers[i])
       if (usrInfo.length != 1) {
         // unable to locate user, try to add other group memebers
-        console.log('Error: Unable to schedule task; could not find subscriber')
+        logger.error('Unable to schedule task; could not find subscriber')
         continue
       }
       // getting index 0 because filter returns a list
@@ -102,7 +114,8 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
 
       // creating cron task for single user. Subs will get the link at 8pm local time
       const subTask = cron.schedule('0 20 * * 1-5', async () => {
-        slack.dmSubs(app, group, sub, group.ts)
+        const curGroup = db.getGroup(group.name)
+        slack.dmSubs(app, curGroup, sub, curGroup.ts)
       }, {
         timezone: tz
       })
@@ -124,12 +137,14 @@ async function scheduleCronJob (eodSent, allTasks, group, app, usrList) {
       subTasks
     }
 
+    logger.info(`Scheduled tasks for group ${group.name}: ${entry}`)
+
     // now we can find this entry later if the group needs to be deleted
     allTasks.push(entry)
 
     return 0
   } catch (error) {
-    console.log(`Error while scheduling cron job: ${error.message}`)
+    logger.error(`Error while scheduling cron job: ${error.message}`)
   }
 }
 
@@ -152,6 +167,8 @@ function removeAllTasks (allTasks, groupName) {
     }
     i += 1
   }
+
+  logger.info(`Removed tasks for group ${groupName}`)
 }
 
 // function to remove a single subscriber task (for unsubscribe functionality)
@@ -166,7 +183,7 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
     const usrInfo = usrList.filter((usr) => usr.id == subscriber)
     if (usrInfo.length != 1) {
       // unable to locate user, try to add other group memebers
-      console.log('Error: Unable to schedule task; could not find subscriber')
+      logger.error('Unable to schedule task; could not find subscriber')
       return
     }
 
@@ -192,8 +209,10 @@ async function addSubscriberTask (app, allTasks, groupName, subscriber, usrList)
         break
       }
     }
+
+    logger.info(`Created subscriber tasks for user ${subscriber} in group ${groupName}`)
   } catch (error) {
-    console.log(`Error while adding subscriber task: ${error.message}`)
+    logger.error(`Error while adding subscriber task: ${error.message}`)
   }
 }
 
@@ -215,6 +234,7 @@ function removeSubscriberTask (allTasks, groupName, subscriber) {
       }
     }
   }
+  logger.info(`Removed subscriber tasks for user ${subscriber} in group ${groupName}`)
 }
 
 function convertPostTimeToCron (hour) {

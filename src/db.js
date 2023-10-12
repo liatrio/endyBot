@@ -1,5 +1,11 @@
 const { mongoose } = require('mongoose')
 const Group = require('../db-schemas/group.js')
+const logger = require('pino')(({
+  transport: {
+    target: 'pino-pretty'
+  },
+  level: 'info'
+}))
 
 // Put all functions interacting with the database here
 
@@ -12,18 +18,19 @@ const connectOptions = {
 const db = process.env.DEV == 1 ? 'db' : '127.0.0.1'
 mongoose.connect(`mongodb://${db}:27017/endybot`, connectOptions).then(
   () => {
-    console.log('Successfully connected to db')
+    logger.info('Successfully connected to database')
   },
   err => {
-    console.log('Could not connect to db. Error: ' + err)
+    logger.error('Could not connect to db. Error: ' + err)
   })
 
 async function addToDB (groupJson) {
   try {
     const inserted = await Group.create(groupJson)
+    logger.info(`Group ${groupJson.name} inserted into the database with the following structure: ${groupJson}`)
     return inserted._id
   } catch (err) {
-    console.error('error adding to the database: ', err)
+    logger.error(`Unable to add ${groupJson.name} to database: ${err}`)
     return null
   }
 }
@@ -41,11 +48,14 @@ async function deleteGroup (groupName) {
   try {
     const result = await Group.deleteOne({ name: groupName })
     if (result.deletedCount > 0) {
+      logger.info(`${groupName} was successfully removed from the database.`)
       return `*${groupName}* was removed successfully`
     } else {
+      logger.warn(`Attempted to remove ${groupName} from the database unsuccessfully`)
       return `*${groupName}* was not deleted`
     }
   } catch (error) {
+    logger.error(`Unable to delete ${groupName} from the database: ${error.message}`)
     return `Error while deleting ${groupName}: ${error.message}`
   }
 }
@@ -67,6 +77,7 @@ async function listGroups (userID) {
       return 'No groups to be listed'
     }
   } catch (error) {
+    logger.error(`Error fetching groups from database: ${error.message}`)
     return `Error while gathering groups from database: ${error.message}`
   }
 
@@ -84,6 +95,7 @@ async function listGroups (userID) {
       }
     }
   } catch (error) {
+    logger.error(`Error parsing subscriber list in listGroups: ${error.message}`)
     return `Error while parsing through subscriber lists in listGroups: ${error.message}`
   }
 
@@ -116,6 +128,7 @@ async function listGroups (userID) {
     // Return fully formatted string to be printed
     return stringedResult
   } catch (error) {
+    logger.error(`Error concatenating string in listGroups: ${error.message}`)
     return `Error while concatenating string in listGroups: ${error.message}`
   }
 }
@@ -141,7 +154,7 @@ async function getGroup (groupName, groupID) {
   }
 
   if (JSON.stringify(searchParams) == '{}') {
-    console.log('Please supply either the groupID or group name.')
+    logger.error(`Unable to get group with the parameters ${groupName}, ${groupID}`)
     return -1
   }
 
@@ -173,7 +186,7 @@ async function describeGroup (groupname) {
     // Display all contributors of the group
     stringedResult += '*Contributors*: '
     for (const user of group.contributors) {
-      stringedResult += `<@${user}>  `
+      stringedResult += `<@${user.name}>  `
     }
 
     // Display all subscribers of the group
@@ -191,6 +204,7 @@ async function describeGroup (groupname) {
 
     return stringedResult
   } catch (error) {
+    logger.error(`Error while describing group ${groupname}: ${error.message}`)
     return `Error while describing group ${groupname}: ${error.message}`
   }
 }
@@ -223,8 +237,10 @@ async function addSubscriber (groupname, userID) {
     await group.save()
 
     // Notify user upon success
+    logger.info(`${userID} sucessfully subscribed to ${groupname}`)
     return `You are now subscribed to *${groupname}*!`
   } catch (error) {
+    logger.error(`Error adding subscriber ${userID} to group ${groupname}: ${error.message}`)
     return `Error while adding subscriber: ${error.message}`
   }
 }
@@ -254,14 +270,103 @@ async function removeSubscriber (groupname, userID) {
       await group.save()
 
       // Notify user upon success
+      logger.info(`${userID} sucessfully unsubscribed from ${groupname}`)
       return `You have unsubscribed from *${groupname}*, and will no longer receive messages about the group. Come back any time!`
     }
 
     // If the user was initially unsubscribed from the group, do nothing and notify them
     return `You were already unsubscribed from *${groupname}*`
   } catch (error) {
+    logger.error(`Error removing subscriber ${userID} from group ${groupname}: ${error.message}`)
     return `Error while removing subscriber: ${error.message}`
   }
+}
+
+/**
+ * @param {String} userID - Slack ID of the user to find all groups for
+ * @returns a list of the groups a user is in
+ */
+async function getUserGroups (userID) {
+  // declare here so it's recognized in every try block
+  let groups
+  try {
+    // Gather all groups from the database
+    groups = await Group.find({})
+    if (groups.length == 0) {
+      return []
+    }
+  } catch (error) {
+    logger.error(`Error gathering groups from database: ${error}`)
+    return `Error while gathering groups from database: ${error.message}`
+  }
+
+  const userGroups = []
+
+  try {
+    // Check all contributor lists to populate arrays
+    for (const group of groups) {
+      for (const contrib of group.contributors) {
+        if (contrib.name == userID) {
+          userGroups.push(group)
+        }
+      }
+    }
+  } catch (error) {
+    logger.error(`Error while parsing  through list in listGroups: ${error}`)
+    return `Error while parsing through subscriber lists in listGroups: ${error.message}`
+  }
+
+  return userGroups
+}
+
+/**
+ * Checks if the given user has posted for this group today or not
+ * @param {String} UID - Slack User ID
+ * @returns bool
+ */
+async function checkUserPosted (UID, groupName) {
+  try {
+    const group = await Group.find({ name: groupName })
+
+    for (const i in group[0].contributors) {
+      if (group[0].contributors[i].name == UID) {
+        logger.info(`Got posted value ${group[0].contributors[i].posted} for user ${group[0].contributors[i].name}`)
+        return group[0].contributors[i].posted
+      }
+    }
+
+    logger.error(`Unable to find contributor ${UID} in group ${groupName}`)
+    return -1
+  } catch (error) {
+    logger.error(`Error checking if user posted: ${error}`)
+    return -1
+  }
+}
+
+/**
+ * Finds the user in the contributors list of the given group and updates their posted bool to the given one here
+ * @param {String} user
+ * @param {JSON} groupName
+ * @param {bool} posted
+ */
+async function updateUserPosted (user, groupName, posted) {
+  try {
+    const group = await Group.find({ name: groupName })
+
+    for (const i in group[0].contributors) {
+      if (group[0].contributors[i].name == user) {
+        group[0].contributors[i].posted = posted
+        group[0].markModified('contributors')
+        await group[0].save()
+      }
+    }
+
+    logger.info(`Updated ${user} posted status to ${posted} in group ${groupName}`)
+  } catch (error) {
+    logger.error(`Unable to update posted status for user ${user} in group ${groupName}: ${error}`)
+    return -1
+  }
+  return 0
 }
 
 /**
@@ -270,22 +375,24 @@ async function removeSubscriber (groupname, userID) {
  * @param {String} ts
  * @returns The updated group object on success, and null on failure
  */
-async function updatePosted (group, ts) {
+async function updateGroupPosted (group, ts) {
   try {
     if (!ts) {
       group.posted = false
       const res = await group.save()
+      logger.info(`Updated ${group.name}'s posted status to ${group.posted}`)
       return res
     }
 
     group.ts = ts
     group.posted = true
     const res = await group.save()
+    logger.info(`Updated ${group.name}'s posted status to ${group.posted}`)
     return res
   } catch (error) {
-    console.log(`Error updating posted for group ${group.name}: ${error}`)
+    logger.error(`Error updating posted for group ${group.name}: ${error}`)
     return null
   }
 }
 
-module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber, updatePosted }
+module.exports = { addToDB, listGroups, getGroup, deleteGroup, describeGroup, addSubscriber, removeSubscriber, getUserGroups, checkUserPosted, updateUserPosted, updateGroupPosted }
